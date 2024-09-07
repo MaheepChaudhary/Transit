@@ -4,3 +4,4 @@ __pycache__/models.cpython-311.pyc
 data/train_data.pkl
 data/test_data.pkl
 __pycache__/dataset.cpython-311.pyc
+data/val_data.pkl
