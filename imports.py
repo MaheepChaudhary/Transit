@@ -20,14 +20,13 @@ import torch.optim as optim
 from datasets import load_dataset
 from jaxtyping import Float
 from nnsight import LanguageModel
-from sae_lens import SAE
 from tqdm import tqdm
-from transformer_lens import ActivationCache, HookedTransformer, utils
+# from transformer_lens import ActivationCache, HookedTransformer, utils
 from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer
 
 import wandb
-from e2e_sae import SAETransformer
-from sparse_autoencoder import sparse_autoencoder
+# from e2e_sae import SAETransformer
+# from sparse_autoencoder import sparse_autoencoder
 
 from datasets import load_dataset
 
