@@ -53,7 +53,6 @@ def visualization(mean_acts):
     
     actlist = [mean_acts["layer 0"], mean_acts["layer 1"], mean_acts["layer 2"], mean_acts["layer 3"], mean_acts["layer 4"], mean_acts["last layer"]]
     
-    print(actlist)
     plt.plot(actlist)
     plt.title('Activation Embeddings Across Layers')
     plt.xlabel('Layers')
@@ -101,18 +100,22 @@ if __name__ == "__main__":
             pickle.dump(activation_embeds, f)
     
     # For batch size 2 so we will take the mean and then will divide by len(val_dataloader)
-    activation_embeds["layer 0"] = np.array(activation_embeds["layer 0"]).mean(axis=0)/10995
-    activation_embeds["layer 1"] = np.array(activation_embeds["layer 1"]).mean(axis=0)/10995
-    activation_embeds["layer 2"] = np.array(activation_embeds["layer 2"]).mean(axis=0)/10995
-    activation_embeds["layer 3"] = np.array(activation_embeds["layer 3"]).mean(axis=0)/10995
-    activation_embeds["layer 4"] = np.array(activation_embeds["layer 4"]).mean(axis=0)/10995
-    activation_embeds["last layer"] = np.array(activation_embeds["last layer"]).mean(axis=0)/10995
-    
-    activation_embeds["layer 0"] = activation_embeds["layer 0"].mean(axis = 0).mean(axis = 0)
-    activation_embeds["layer 1"] = activation_embeds["layer 1"].mean(axis = 0).mean(axis = 0)
-    activation_embeds["layer 2"] = activation_embeds["layer 2"].mean(axis = 0).mean(axis = 0)
-    activation_embeds["layer 3"] = activation_embeds["layer 3"].mean(axis = 0).mean(axis = 0)
-    activation_embeds["layer 4"] = activation_embeds["layer 4"].mean(axis = 0).mean(axis = 0)
-    activation_embeds["last layer"] = activation_embeds["last layer"].mean(axis = 0).mean(axis = 0)
+
+    # Replace mean with norm
+    activation_embeds["layer 0"] = np.linalg.norm(np.array(activation_embeds["layer 0"]), axis=0)/10995
+    activation_embeds["layer 1"] = np.linalg.norm(np.array(activation_embeds["layer 1"]), axis=0)/10995
+    activation_embeds["layer 2"] = np.linalg.norm(np.array(activation_embeds["layer 2"]), axis=0)/10995
+    activation_embeds["layer 3"] = np.linalg.norm(np.array(activation_embeds["layer 3"]), axis=0)/10995
+    activation_embeds["layer 4"] = np.linalg.norm(np.array(activation_embeds["layer 4"]), axis=0)/10995
+    activation_embeds["last layer"] = np.linalg.norm(np.array(activation_embeds["last layer"]), axis=0)/10995
+
+    # Additional norm calculations for nested structures
+    activation_embeds["layer 0"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 0"], axis=0), axis = 0)
+    activation_embeds["layer 1"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 1"], axis=0), axis = 0)
+    activation_embeds["layer 2"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 2"], axis=0), axis = 0)
+    activation_embeds["layer 3"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 3"], axis=0), axis = 0)
+    activation_embeds["layer 4"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 4"], axis=0), axis = 0)
+    activation_embeds["last layer"] = np.linalg.norm(np.linalg.norm(activation_embeds["last layer"], axis=0), axis = 0)
+
     
     visualization(activation_embeds)
