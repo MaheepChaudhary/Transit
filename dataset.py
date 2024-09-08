@@ -24,14 +24,16 @@ def inspect_data(data):
     return train_dataset, validation_dataset
 
 def custom_collate_fn(batch):
-    # Implement conversion from tokenizers.Encoding to PyTorch tensors
-    # Example:
-    input_ids = [item.ids for item in batch]
-    attention_masks = [item.attention_mask for item in batch]
-    # Convert lists to tensors
-    input_ids = torch.tensor(input_ids)
-    attention_masks = torch.tensor(attention_masks)
+    # Extract input_ids and attention_mask from each item in the batch
+    input_ids = [item['input_ids'] for item in batch]
+    attention_masks = [item['attention_mask'] for item in batch]
+
+    # Convert lists of tensors to a single tensor
+    input_ids = torch.stack(input_ids)
+    attention_masks = torch.stack(attention_masks)
+
     return {'input_ids': input_ids, 'attention_mask': attention_masks}
+
 
 
 def tokenize_with_progress(data, tokenizer, max_len=128):
@@ -56,17 +58,31 @@ def tokenize_with_progress(data, tokenizer, max_len=128):
 
     return tokenized_data
 
-def process_data(
-    model,
-    train_data,
-    val_data,
-):
+class TokenizedDataset(Dataset):
+    def __init__(self, tokenized_data):
+        self.input_ids = tokenized_data['input_ids']
+        self.attention_mask = tokenized_data['attention_mask']
+
+    def __len__(self):
+        return len(self.input_ids)
+
+    def __getitem__(self, idx):
+        return {
+            'input_ids': self.input_ids[idx],
+            'attention_mask': self.attention_mask[idx]
+        }
+
+def process_data(model, train_data, val_data):
     max_len = 128  # You can set this to a value that suits your model or dataset.
 
     tokenized_train_data = tokenize_with_progress(train_data, model.tokenizer, max_len)
     tokenized_val_data = tokenize_with_progress(val_data, model.tokenizer, max_len)
 
-    train_dataloader = DataLoader(tokenized_train_data, batch_size=8, shuffle=True, collate_fn=custom_collate_fn)
-    validation_dataloader = DataLoader(tokenized_val_data, batch_size=8, collate_fn=custom_collate_fn)
+    train_dataset = TokenizedDataset(tokenized_train_data)
+    val_dataset = TokenizedDataset(tokenized_val_data)
+
+    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=custom_collate_fn)
+    validation_dataloader = DataLoader(val_dataset, batch_size=8, collate_fn=custom_collate_fn)
 
     return train_dataloader, validation_dataloader
+
