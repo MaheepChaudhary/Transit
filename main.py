@@ -10,20 +10,20 @@ if __name__ == "__main__":
     train_data, val_data = inspect_data()
     
     try:
-        with open("data/train_data.pkl", "rb") as f:
-            train_data = pickle.load(f)
+        # with open("data/train_data.pkl", "rb") as f:
+        #     train_data = pickle.load(f)
         
         with open("data/val_data.pkl", "rb") as f:
             val_data = pickle.load(f)
 
     except:
-        train_dataloader, val_dataloader = process_data(model, train_data, val_data)
+        val_dataloader = process_data(model, train_data, val_data)
         
-        with open("data/train_data.pkl", "wb") as f:
-            pickle.dump(train_data, f)
+        # with open("data/train_data.pkl", "wb") as f:
+        #     pickle.dump(train_data, f)
         
         with open("data/val_data.pkl", "wb") as f:
-            pickle.dump(val_data, f)
+            pickle.dump(val_dataloader, f)
     
     print(model)
     

@@ -42,10 +42,11 @@ def process_data(
 ):
     
     max_len = 128  # You can set this to a value that suits your model or dataset.
-    tokenized_train_data = model.tokenizer(train_data['text'], padding='max_length', truncation=True, max_length=max_len, return_tensors="pt")
+    # tokenized_train_data = model.tokenizer(train_data['text'], padding='max_length', truncation=True, max_length=max_len, return_tensors="pt")
     tokenized_val_data = model.tokenizer(val_data['text'], padding='max_length', truncation=True, max_length=max_len, return_tensors="pt")
 
-    train_dataloader = DataLoader(tokenized_train_data, batch_size=8, shuffle=True, collate_fn = custom_collate_fn)
+    # train_dataloader = DataLoader(tokenized_train_data, batch_size=8, shuffle=True, collate_fn = custom_collate_fn)
     validation_dataloader = DataLoader(tokenized_val_data, batch_size=8, collate_fn=custom_collate_fn)
 
-    return train_dataloader, validation_dataloader
+    # return train_dataloader, validation_dataloader
+    return validation_dataloader
