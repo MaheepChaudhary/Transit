@@ -19,12 +19,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from datasets import load_dataset
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, TensorDataset
 from jaxtyping import Float
 from nnsight import LanguageModel
 from tqdm import tqdm
 # from transformer_lens import ActivationCache, HookedTransformer, utils
 from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer
+import gc
 
 import wandb
 # from e2e_sae import SAETransformer

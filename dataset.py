@@ -72,17 +72,17 @@ class TokenizedDataset(Dataset):
             'attention_mask': self.attention_mask[idx]
         }
 
-def process_data(model, train_data, val_data):
+def process_data(model, train_data, val_data, batch_size):
     max_len = 128  # You can set this to a value that suits your model or dataset.
 
-    tokenized_train_data = tokenize_with_progress(train_data, model.tokenizer, max_len)
+    # tokenized_train_data = tokenize_with_progress(train_data, model.tokenizer, max_len)
     tokenized_val_data = tokenize_with_progress(val_data, model.tokenizer, max_len)
 
-    train_dataset = TokenizedDataset(tokenized_train_data)
+    # train_dataset = TokenizedDataset(tokenized_train_data)
     val_dataset = TokenizedDataset(tokenized_val_data)
 
-    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=custom_collate_fn)
-    validation_dataloader = DataLoader(val_dataset, batch_size=8, collate_fn=custom_collate_fn)
-
-    return train_dataloader, validation_dataloader
+    # train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True, collate_fn=custom_collate_fn)
+    validation_dataloader = DataLoader(val_dataset, batch_size=batch_size, collate_fn=custom_collate_fn, pin_memory=True, num_workers=1)
+    # return train_dataloader, validation_dataloader
+    return validation_dataloader
 
