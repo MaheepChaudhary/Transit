@@ -130,16 +130,20 @@ class gradients_norm:
         for batch in tqdm(self.dataloader):
             
             with self.model.trace(batch["input_ids"]) as tracer:
-                output0 = model.gpt_neox.layers[0].mlp.output[0].grad.save()
-                output1 = model.gpt_neox.layers[1].mlp.output[0].grad.save()
-                output2 = model.gpt_neox.layers[2].mlp.output[0].grad.save()
-                output3 = model.gpt_neox.layers[3].mlp.output[0].grad.save()
-                output4 = model.gpt_neox.layers[4].mlp.output[0].grad.save()
-                output = model.embed_out.output.grad.save()
+                print()
+                print("I am inside")
+                print()
+                output0 = self.model.gpt_neox.layers[0].mlp.output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].mlp.output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].mlp.output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].mlp.output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].mlp.output[0].grad.save()
+                output = self.model.embed_out.output.grad.save()
                 
-                model.output.logits.sum().backward()
+                self.model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            print(output0)
             grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
             grad_embeds["layer 1"].append(t.norm(output1, dim = -1))
             grad_embeds["layer 2"].append(t.norm(output2, dim = -1))
