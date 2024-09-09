@@ -25,11 +25,11 @@ def activation_embeds_fn(model, dataloader): # So it contains 5 layers and one l
         for batch in tqdm(val_dataloader):
             
             with model.trace(batch["input_ids"]) as tracer:
-                output0 = model.gpt_neox.layers[0].output[0].save()
-                output1 = model.gpt_neox.layers[1].output[0].save()
-                output2 = model.gpt_neox.layers[2].output[0].save()
-                output3 = model.gpt_neox.layers[3].output[0].save()
-                output4 = model.gpt_neox.layers[4].output[0].save()
+                output0 = model.gpt_neox.layers[0].mlp.output[0].save()
+                output1 = model.gpt_neox.layers[1].mlp.output[0].save()
+                output2 = model.gpt_neox.layers[2].mlp.output[0].save()
+                output3 = model.gpt_neox.layers[3].mlp.output[0].save()
+                output4 = model.gpt_neox.layers[4].mlp.output[0].save()
                 output = model.embed_out.output.save()
 
             activation_embeds["layer 0"]+=output0
@@ -44,20 +44,57 @@ def activation_embeds_fn(model, dataloader): # So it contains 5 layers and one l
             del output
             gc.collect()
             
-    with open("data/activation_embeds.pkl", "wb") as f:
+    with open("data/activation_embeds_prenorm.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
             
     return activation_embeds
 
-def visualization(mean_acts):
+def norm(activation_embeds):
     
-    actlist = [mean_acts["layer 0"], mean_acts["layer 1"], mean_acts["layer 2"], mean_acts["layer 3"], mean_acts["layer 4"], mean_acts["last layer"]]
+    activation_embeds["layer 0"] = np.linalg.norm(activation_embeds["layer 0"], axis=0)/10995
+    activation_embeds["layer 1"] = np.linalg.norm(activation_embeds["layer 1"], axis=0)/10995
+    activation_embeds["layer 2"] = np.linalg.norm(activation_embeds["layer 2"], axis=0)/10995
+    activation_embeds["layer 3"] = np.linalg.norm(activation_embeds["layer 3"], axis=0)/10995
+    activation_embeds["layer 4"] = np.linalg.norm(activation_embeds["layer 4"], axis=0)/10995
+    activation_embeds["last layer"] = np.linalg.norm(activation_embeds["last layer"], axis=0)/10995
+
+    # Additional norm calculations for nested structures
+    activation_embeds["layer 0"] = np.linalg.norm(activation_embeds["layer 0"], axis=1)
+    activation_embeds["layer 1"] = np.linalg.norm(activation_embeds["layer 1"], axis=1)
+    activation_embeds["layer 2"] = np.linalg.norm(activation_embeds["layer 2"], axis=1)
+    activation_embeds["layer 3"] = np.linalg.norm(activation_embeds["layer 3"], axis=1)
+    activation_embeds["layer 4"] = np.linalg.norm(activation_embeds["layer 4"], axis=1)
+    activation_embeds["last layer"] = np.linalg.norm(activation_embeds["last layer"], axis=1)
     
-    plt.plot(actlist)
-    plt.title('Activation Embeddings Across Layers')
-    plt.xlabel('Layers')
-    plt.ylabel('Activation Value (Averaged)')
-    plt.legend()
+    assert activation_embeds["layer 0"].shape == activation_embeds["layer 1"].shape == activation_embeds["layer 2"].shape == activation_embeds["layer 3"].shape == activation_embeds["layer 4"].shape == (128,)
+    assert activation_embeds["last layer"].shape == (128,)
+    
+    actlist = np.array([
+        activation_embeds["layer 0"], 
+        activation_embeds["layer 1"], 
+        activation_embeds["layer 2"], 
+        activation_embeds["layer 3"], 
+        activation_embeds["layer 4"], 
+        # mean_acts["last layer"]
+        ])
+    
+    print(actlist)
+
+    # Create the heatmap
+    plt.figure(figsize=(10, 5))  # Set figure size
+    plt.imshow(actlist, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+    # Add color bar to indicate the scale
+    plt.colorbar()
+
+    # Set labels
+    plt.xlabel('Dimensions')
+    plt.ylabel('Rows')
+
+    # Optionally, you can add titles
+    plt.title('Heatmap of 128-Dimension Data for 5 Rows')
+
+    # Show the heatmap
     plt.show()
 
 
@@ -92,30 +129,18 @@ if __name__ == "__main__":
             pickle.dump(val_dataloader, f)
     
     try:
-        with open("data/activation_embeds.pkl", "rb") as f:
+        with open("data/activation_embeds_prenorm.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
     except:
         activation_embeds = activation_embeds_fn(model, val_dataloader)
-        with open("data/activation_embeds.pkl", "wb") as f:
+        with open("data/activation_embeds_prenorm.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
     # For batch size 2 so we will take the mean and then will divide by len(val_dataloader)
 
     # Replace mean with norm
-    activation_embeds["layer 0"] = np.linalg.norm(np.array(activation_embeds["layer 0"]), axis=0)/10995
-    activation_embeds["layer 1"] = np.linalg.norm(np.array(activation_embeds["layer 1"]), axis=0)/10995
-    activation_embeds["layer 2"] = np.linalg.norm(np.array(activation_embeds["layer 2"]), axis=0)/10995
-    activation_embeds["layer 3"] = np.linalg.norm(np.array(activation_embeds["layer 3"]), axis=0)/10995
-    activation_embeds["layer 4"] = np.linalg.norm(np.array(activation_embeds["layer 4"]), axis=0)/10995
-    activation_embeds["last layer"] = np.linalg.norm(np.array(activation_embeds["last layer"]), axis=0)/10995
-
-    # Additional norm calculations for nested structures
-    activation_embeds["layer 0"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 0"], axis=0), axis = 0)
-    activation_embeds["layer 1"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 1"], axis=0), axis = 0)
-    activation_embeds["layer 2"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 2"], axis=0), axis = 0)
-    activation_embeds["layer 3"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 3"], axis=0), axis = 0)
-    activation_embeds["layer 4"] = np.linalg.norm(np.linalg.norm(activation_embeds["layer 4"], axis=0), axis = 0)
-    activation_embeds["last layer"] = np.linalg.norm(np.linalg.norm(activation_embeds["last layer"], axis=0), axis = 0)
-
+    print(activation_embeds["layer 0"].shape)
     
-    visualization(activation_embeds)
+    
+    norm(activation_embeds)
+    normwmean(activation_embeds)
