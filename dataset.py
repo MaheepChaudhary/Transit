@@ -86,3 +86,24 @@ def process_data(model, train_data, val_data, batch_size):
     # return train_dataloader, validation_dataloader
     return validation_dataloader
 
+def pad_to_equal_shape(tensors):
+    # Find the maximum shape along the second dimension
+    max_shape = max(tensor.size(1) for tensor in tensors)
+    
+    # Create a list to hold the padded tensors
+    padded_tensors = []
+    
+    for tensor in tensors:
+        # Calculate the padding size needed
+        padding_size = max_shape - tensor.size(1)
+        
+        # Pad the tensor with zeros on the right side
+        padded_tensor = torch.nn.functional.pad(tensor, (0, padding_size), mode='constant', value=0)
+        
+        # Reshape the tensor to remove the leading dimension
+        padded_tensor = padded_tensor.view(-1)
+        
+        # Add the padded tensor to the list
+        padded_tensors.append(padded_tensor)
+    
+    return padded_tensors

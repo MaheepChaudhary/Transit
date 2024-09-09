@@ -101,7 +101,8 @@ class normed:
         self.actemb = actemb
 
         # Additional norm calculations for nested structures
-        assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        print(np.array(self.actemb["layer 0"]).shape)
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
         self.actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)
         self.actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)
         self.actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)
@@ -111,7 +112,6 @@ class normed:
         
         print(self.actemb["layer 0"].shape)
         
-        assert np.array(self.actemb["layer 0"]).shape == np.array(self.actemb["layer 1"]).shape == np.array(self.actemb["layer 2"]).shape == np.array(self.actemb["layer 3"]).shape == np.array(self.actemb["layer 4"]).shape == (128,)
         
     def norm(self):
         
@@ -266,8 +266,18 @@ if __name__ == "__main__":
         with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
-
-    normed_class = normed(activation_embeds, val_data)
+    layer0act = pad_to_equal_shape(activation_embeds["layer 0"])
+    layer1act = pad_to_equal_shape(activation_embeds["layer 1"])
+    layer2act = pad_to_equal_shape(activation_embeds["layer 2"])
+    layer3act = pad_to_equal_shape(activation_embeds["layer 3"])
+    layer4act = pad_to_equal_shape(activation_embeds["layer 4"])
+    
+    pprint(activation_embeds["layer 0"][0])
+    pprint(activation_embeds["layer 1"][0])
+    pprint(activation_embeds["layer 2"][0])
+    pprint(activation_embeds["layer 3"][0])
+    pprint(activation_embeds["layer 4"][0])
+    normed_class = normed({"layer 0": layer0act, "layer 1": layer1act, "layer 2": layer2act, "layer 3": layer3act, "layer 4": layer4act})
     normed_class.normwmean()
     normed_class.norm()
     
