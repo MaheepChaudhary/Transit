@@ -130,31 +130,27 @@ class gradients_norm:
         for batch in tqdm(self.dataloader):
             
             with self.model.trace(batch["input_ids"]) as tracer:
-                print()
-                print("I am inside")
-                print()
-                output0 = self.model.gpt_neox.layers[0].mlp.output[0].grad.save()
-                output1 = self.model.gpt_neox.layers[1].mlp.output[0].grad.save()
-                output2 = self.model.gpt_neox.layers[2].mlp.output[0].grad.save()
-                output3 = self.model.gpt_neox.layers[3].mlp.output[0].grad.save()
-                output4 = self.model.gpt_neox.layers[4].mlp.output[0].grad.save()
-                output = self.model.embed_out.output.grad.save()
+            
+                output0 = self.model.gpt_neox.layers[0].mlp.output.grad[0].save()
+                output1 = self.model.gpt_neox.layers[1].mlp.output.grad[0].save()
+                output2 = self.model.gpt_neox.layers[2].mlp.output.grad[0].save()
+                output3 = self.model.gpt_neox.layers[3].mlp.output.grad[0].save()
+                output4 = self.model.gpt_neox.layers[4].mlp.output.grad[0].save()
                 
                 self.model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            print(output0)
+            assert output0.shape == output1.shape == output2.shape == output3.shape == output4.shape == (128, 512)
             grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
             grad_embeds["layer 1"].append(t.norm(output1, dim = -1))
             grad_embeds["layer 2"].append(t.norm(output2, dim = -1))
             grad_embeds["layer 3"].append(t.norm(output3, dim = -1))
             grad_embeds["layer 4"].append(t.norm(output4, dim = -1))
-            grad_embeds["last layer"].append(t.norm(output, dim = -1))
             
         with open("data/grads.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
             
-        return self.model.lm_head.output.grad
+        return grad_embeds
 
     def norm(self):
         
@@ -165,11 +161,11 @@ class gradients_norm:
         self.grads["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
         self.grads["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
         self.grads["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
-        self.grads["last layer"] = np.linalg.norm(self.grads["last layer"], axis=0)
+        # self.grads["last layer"] = np.linalg.norm(self.grads["last layer"], axis=0)
         
         assert self.grads["layer 0"].shape == self.grads["layer 1"].shape == self.grads["layer 2"].shape == self.grads["layer 3"].shape == self.grads["layer 4"].shape == self.grads["last layer"] == (128,)
         
-        plotting(data=self.grads, name = "figures/grads_norm.png")
+        plotting(data=self.grads, name = "figures/grads_layer_seq_norm.png")
     
     def normwmean(self):
         
@@ -182,7 +178,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
 
-        plotting(data=actlistmean, name = "figures/layer_seq_normwmean.png")
+        plotting(data=actlistmean, name = "figures/grad_layer_seq_normwmean.png")
 
 
 if __name__ == "__main__":
