@@ -49,55 +49,76 @@ def activation_embeds_fn(model, dataloader): # So it contains 5 layers and one l
             
     return activation_embeds
 
-def norm(activation_embeds):
-    
-    activation_embeds["layer 0"] = np.linalg.norm(activation_embeds["layer 0"], axis=0)/10995
-    activation_embeds["layer 1"] = np.linalg.norm(activation_embeds["layer 1"], axis=0)/10995
-    activation_embeds["layer 2"] = np.linalg.norm(activation_embeds["layer 2"], axis=0)/10995
-    activation_embeds["layer 3"] = np.linalg.norm(activation_embeds["layer 3"], axis=0)/10995
-    activation_embeds["layer 4"] = np.linalg.norm(activation_embeds["layer 4"], axis=0)/10995
-    activation_embeds["last layer"] = np.linalg.norm(activation_embeds["last layer"], axis=0)/10995
+class normed:
 
-    # Additional norm calculations for nested structures
-    activation_embeds["layer 0"] = np.linalg.norm(activation_embeds["layer 0"], axis=1)
-    activation_embeds["layer 1"] = np.linalg.norm(activation_embeds["layer 1"], axis=1)
-    activation_embeds["layer 2"] = np.linalg.norm(activation_embeds["layer 2"], axis=1)
-    activation_embeds["layer 3"] = np.linalg.norm(activation_embeds["layer 3"], axis=1)
-    activation_embeds["layer 4"] = np.linalg.norm(activation_embeds["layer 4"], axis=1)
-    activation_embeds["last layer"] = np.linalg.norm(activation_embeds["last layer"], axis=1)
-    
-    assert activation_embeds["layer 0"].shape == activation_embeds["layer 1"].shape == activation_embeds["layer 2"].shape == activation_embeds["layer 3"].shape == activation_embeds["layer 4"].shape == (128,)
-    assert activation_embeds["last layer"].shape == (128,)
-    
-    actlist = np.array([
-        activation_embeds["layer 0"], 
-        activation_embeds["layer 1"], 
-        activation_embeds["layer 2"], 
-        activation_embeds["layer 3"], 
-        activation_embeds["layer 4"], 
-        # mean_acts["last layer"]
-        ])
-    
-    print(actlist)
+    def __init__(self, actemb):
+        self.actemb = actemb
+        self.actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)/10995
+        self.actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)/10995
+        self.actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)/10995
+        self.actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)/10995
+        self.actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)/10995
+        self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)/10995
 
-    # Create the heatmap
-    plt.figure(figsize=(10, 5))  # Set figure size
-    plt.imshow(actlist, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+        # Additional norm calculations for nested structures
+        self.actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=1)
+        self.actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=1)
+        self.actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=1)
+        self.actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=1)
+        self.actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=1)
+        self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=1)
+        
+        assert self.actemb["layer 0"].shape == self.actemb["layer 1"].shape == self.actemb["layer 2"].shape == self.actemb["layer 3"].shape == self.actemb["layer 4"].shape == (128,)
+        assert self.actemb["last layer"].shape == (128,)
+        
+    def norm(self):
+        
+        actlist = np.array([
+            np.log(self.actemb["layer 0"]), 
+            np.log(self.actemb["layer 1"]), 
+            np.log(self.actemb["layer 2"]), 
+            np.log(self.actemb["layer 3"]), 
+            np.log(self.actemb["layer 4"]), 
+            # mean_acts["last layer"]
+            ])
+        
+        self.plotting(data=actlist, name = "figures/layer_seq_norm.png")
 
-    # Add color bar to indicate the scale
-    plt.colorbar()
+    def normwmean(self):
+        
+        
+        actlistmean = np.array([
+            np.log(self.actemb["layer 0"] - np.mean(self.actemb["layer 0"], axis = 0)), 
+            np.log(self.actemb["layer 1"] - np.mean(self.actemb["layer 1"], axis = 0)), 
+            np.log(self.actemb["layer 2"] - np.mean(self.actemb["layer 2"], axis = 0)), 
+            np.log(self.actemb["layer 3"] - np.mean(self.actemb["layer 3"], axis = 0)), 
+            np.log(self.actemb["layer 4"] - np.mean(self.actemb["layer 4"], axis = 0)), 
+            # mean_acts["last layer"]
+            ])
 
-    # Set labels
-    plt.xlabel('Dimensions')
-    plt.ylabel('Rows')
+        self.plotting(data=actlistmean, name = "figures/layer_seq_normwmean.png")
 
-    # Optionally, you can add titles
-    plt.title('Heatmap of 128-Dimension Data for 5 Rows')
+    @staticmethod
+    def plotting(data, name):
+        # Create the heatmap
+        plt.figure(figsize=(10, 5))  # Set figure size
+        plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
 
-    # Show the heatmap
-    plt.show()
+        # Add color bar to indicate the scale
+        plt.colorbar()
 
+        # Set labels
+        plt.xlabel('Dimensions')
+        plt.ylabel('Rows')
 
+        # Optionally, you can add titles
+        plt.title('Heatmap of 128-Dimension Data for 5 Rows')
+
+        # Show the heatmap
+        plt.savefig(name)
+        
+        
+        
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
@@ -136,11 +157,7 @@ if __name__ == "__main__":
         with open("data/activation_embeds_prenorm.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
-    # For batch size 2 so we will take the mean and then will divide by len(val_dataloader)
 
-    # Replace mean with norm
-    print(activation_embeds["layer 0"].shape)
-    
-    
-    norm(activation_embeds)
-    normwmean(activation_embeds)
+    normed_class = normed(activation_embeds)
+    normed_class.normwmean()
+    normed_class.norm()
