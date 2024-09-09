@@ -73,39 +73,84 @@ class normed:
 
     def __init__(self, actemb):
         self.actemb = actemb
-
-        # Additional norm calculations for nested structures
-        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
-        self.actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)
-        self.actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)
-        self.actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)
-        self.actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)
-        self.actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)
-        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
+        
+
+
         
     def norm(self):
         
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        norm_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        
+        norm_actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        print(np.array(self.actemb["layer 0"]).shape)
+        
         actlist = np.array([
-            np.log(np.array(self.actemb["layer 0"])),
-            np.log(np.array(self.actemb["layer 1"])),
-            np.log(np.array(self.actemb["layer 2"])),
-            np.log(np.array(self.actemb["layer 3"])),
-            np.log(np.array(self.actemb["layer 4"])),
+            np.log(np.array(norm_actemb["layer 0"])),
+            np.log(np.array(norm_actemb["layer 1"])),
+            np.log(np.array(norm_actemb["layer 2"])),
+            np.log(np.array(norm_actemb["layer 3"])),
+            np.log(np.array(norm_actemb["layer 4"])),
             # mean_acts["last layer"]
             ])
-        
+        print(actlist.shape)
         plotting(data=actlist, name = "figures/layer_seq_norm.png")
+
 
     def normwmean(self):
         
-        epsilon = 1e-5
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        normwmean_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        normwmean_actemb_mod = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        normwmean_actemb["layer 0"] = np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)
+        normwmean_actemb["layer 1"] = np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)
+        normwmean_actemb["layer 2"] = np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)
+        normwmean_actemb["layer 3"] = np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)
+        normwmean_actemb["layer 4"] = np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)
+        
+        normwmean_actemb_mod["layer 0"] = np.linalg.norm(normwmean_actemb["layer 0"], axis=0)
+        normwmean_actemb_mod["layer 1"] = np.linalg.norm(normwmean_actemb["layer 1"], axis=0)
+        normwmean_actemb_mod["layer 2"] = np.linalg.norm(normwmean_actemb["layer 2"], axis=0)
+        normwmean_actemb_mod["layer 3"] = np.linalg.norm(normwmean_actemb["layer 3"], axis=0)
+        normwmean_actemb_mod["layer 4"] = np.linalg.norm(normwmean_actemb["layer 4"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        
         actlistmean = np.array([
-            np.log(np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0) + epsilon), 
-            np.log(np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0) + epsilon),
-            np.log(np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0) + epsilon),
-            np.log(np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0) + epsilon),
-            np.log(np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0) + epsilon),
+            np.log(np.array(normwmean_actemb_mod["layer 0"])),
+            np.log(np.array(normwmean_actemb_mod["layer 1"])),
+            np.log(np.array(normwmean_actemb_mod["layer 2"])),
+            np.log(np.array(normwmean_actemb_mod["layer 3"])),
+            np.log(np.array(normwmean_actemb_mod["layer 4"])),
             # mean_acts["last layer"]
             ])
 
@@ -125,15 +170,7 @@ class gradients_norm:
             self.grads = grads  
         except:
             self.grads = self.get_grads()
-    
-        assert np.array(self.grads["layer 0"]).shape[1] == 128
-        self.grads["layer 0"] = np.linalg.norm(self.grads["layer 0"], axis=0)
-        self.grads["layer 1"] = np.linalg.norm(self.grads["layer 1"], axis=0)
-        self.grads["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
-        self.grads["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
-        self.grads["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
-        # self.grads["last layer"] = np.linalg.norm(self.grads["last layer"], axis=0)
-        assert np.array(self.grads["layer 0"]).shape == np.array(self.grads["layer 1"]).shape == np.array(self.grads["layer 2"]).shape == np.array(self.grads["layer 3"]).shape == np.array(self.grads["layer 4"]).shape == (128,)
+            
     
     
     def get_grads(self):
@@ -151,21 +188,20 @@ class gradients_norm:
             
             with self.model.trace(batch["input_ids"]) as tracer:
             
-                output0 = self.model.gpt_neox.layers[0].mlp.output.grad[0].save()
-                output1 = self.model.gpt_neox.layers[1].mlp.output.grad[0].save()
-                output2 = self.model.gpt_neox.layers[2].mlp.output.grad[0].save()
-                output3 = self.model.gpt_neox.layers[3].mlp.output.grad[0].save()
-                output4 = self.model.gpt_neox.layers[4].mlp.output.grad[0].save()
+                output0 = self.model.gpt_neox.layers[0].mlp.output.grad.save()
+                output1 = self.model.gpt_neox.layers[1].mlp.output.grad.save()
+                output2 = self.model.gpt_neox.layers[2].mlp.output.grad.save()
+                output3 = self.model.gpt_neox.layers[3].mlp.output.grad.save()
+                output4 = self.model.gpt_neox.layers[4].mlp.output.grad.save()
                 
                 self.model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            assert output0.shape == output1.shape == output2.shape == output3.shape == output4.shape == (128, 512)
-            grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
-            grad_embeds["layer 1"].append(t.norm(output1, dim = -1))
-            grad_embeds["layer 2"].append(t.norm(output2, dim = -1))
-            grad_embeds["layer 3"].append(t.norm(output3, dim = -1))
-            grad_embeds["layer 4"].append(t.norm(output4, dim = -1))
+            grad_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
+            grad_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
+            grad_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
+            grad_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
+            grad_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
             
         with open("data/grads.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
@@ -175,16 +211,47 @@ class gradients_norm:
     def norm(self):
         
         # Additional norm calculations for nested structures
-    
-        data_norm = np.array([
-            np.log(self.grads["layer 0"]),
-            np.log(self.grads["layer 1"]),
-            np.log(self.grads["layer 2"]),
-            np.log(self.grads["layer 3"]),
-            np.log(self.grads["layer 4"]),
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        normwmean_grad = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        normwmean_grad_mod = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        normwmean_grad["layer 0"] = np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)
+        normwmean_grad["layer 1"] = np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)
+        normwmean_grad["layer 2"] = np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)
+        normwmean_grad["layer 3"] = np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)
+        normwmean_grad["layer 4"] = np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)
+        
+        normwmean_grad_mod["layer 0"] = np.linalg.norm(normwmean_grad["layer 0"], axis=0)
+        normwmean_grad_mod["layer 1"] = np.linalg.norm(normwmean_grad["layer 1"], axis=0)
+        normwmean_grad_mod["layer 2"] = np.linalg.norm(normwmean_grad["layer 2"], axis=0)
+        normwmean_grad_mod["layer 3"] = np.linalg.norm(normwmean_grad["layer 3"], axis=0)
+        normwmean_grad_mod["layer 4"] = np.linalg.norm(normwmean_grad["layer 4"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        
+        gradlistmean = np.array([
+            np.log(np.array(normwmean_grad_mod["layer 0"])),
+            np.log(np.array(normwmean_grad_mod["layer 1"])),
+            np.log(np.array(normwmean_grad_mod["layer 2"])),
+            np.log(np.array(normwmean_grad_mod["layer 3"])),
+            np.log(np.array(normwmean_grad_mod["layer 4"])),
+            # mean_acts["last layer"]
             ])
         
-        plotting(data=data_norm, name = "figures/grads_layer_seq_norm.png")
+        plotting(data=gradlistmean, name = "figures/grads_layer_seq_norm.png")
     
     def normwmean(self):
         
