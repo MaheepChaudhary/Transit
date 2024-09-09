@@ -13,16 +13,15 @@ def create_dataloader(tokenized_data, batch_size=2):
 
 # Create DataLoader
 
-
-def activation_embeds_fn(model, dataloader): # So it contains 5 layers and one last layer. 
+def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 layers and one last layer. 
     model.eval()
     
     activation_embeds = {}
-    activation_embeds["layer 0"] = activation_embeds["layer 1"] = activation_embeds["layer 2"] = activation_embeds["layer 3"] = activation_embeds["layer 4"] = t.zeros((args.batch_size, 128, 512))
-    activation_embeds["last layer"] = t.zeros((args.batch_size, 128, 50304))
+    activation_embeds["layer 0"] = activation_embeds["layer 1"] = activation_embeds["layer 2"] = activation_embeds["layer 3"] = activation_embeds["layer 4"] = []
+    activation_embeds["last layer"] = []
     
     with t.no_grad():
-        for batch in tqdm(val_dataloader):
+        for batch in tqdm(dataloader):
             
             with model.trace(batch["input_ids"]) as tracer:
                 output0 = model.gpt_neox.layers[0].mlp.output[0].save()
@@ -32,22 +31,37 @@ def activation_embeds_fn(model, dataloader): # So it contains 5 layers and one l
                 output4 = model.gpt_neox.layers[4].mlp.output[0].save()
                 output = model.embed_out.output.save()
 
-            activation_embeds["layer 0"]+=output0
-            activation_embeds["layer 1"]+=output1
-            activation_embeds["layer 2"]+=output2
-            activation_embeds["layer 3"]+=output3
-            activation_embeds["layer 4"]+=output4
-            activation_embeds["last layer"]+=output
-            
-
-            del batch
-            del output
-            gc.collect()
+            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            activation_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
+            activation_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
+            activation_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
+            activation_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
+            activation_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
+            activation_embeds["last layer"].append(t.norm(t.norm(output, dim = 0), dim = -1))
             
     with open("data/activation_embeds_prenorm.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
             
     return activation_embeds
+
+def plotting(data, name):
+    # Create the heatmap
+    data = np.transpose(data)  # Transpose the data to match the heatmap
+    plt.figure(figsize=(10, 5))  # Set figure size
+    plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+    # Add color bar to indicate the scale
+    plt.colorbar()
+
+    # Set labels
+    plt.xlabel('Dimensions')
+    plt.ylabel('Rows')
+
+    # Optionally, you can add titles
+    plt.title('Heatmap of 128-Dimension Data for 5 Rows')
+
+    # Show the heatmap
+    plt.savefig(name)
 
 class normed:
 
@@ -82,7 +96,7 @@ class normed:
             # mean_acts["last layer"]
             ])
         
-        self.plotting(data=actlist, name = "figures/layer_seq_norm.png")
+        plotting(data=actlist, name = "figures/layer_seq_norm.png")
 
     def normwmean(self):
         
@@ -96,29 +110,49 @@ class normed:
             # mean_acts["last layer"]
             ])
 
-        self.plotting(data=actlistmean, name = "figures/layer_seq_normwmean.png")
+        plotting(data=actlistmean, name = "figures/layer_seq_normwmean.png")
 
-    @staticmethod
-    def plotting(data, name):
-        # Create the heatmap
-        plt.figure(figsize=(10, 5))  # Set figure size
-        plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
 
-        # Add color bar to indicate the scale
-        plt.colorbar()
-
-        # Set labels
-        plt.xlabel('Dimensions')
-        plt.ylabel('Rows')
-
-        # Optionally, you can add titles
-        plt.title('Heatmap of 128-Dimension Data for 5 Rows')
-
-        # Show the heatmap
-        plt.savefig(name)
+class gradients_norm:
+    
+    def __init__(self, model, dataloader):
         
+        self.model = model
+        self.dataloader = dataloader
+    
+    def get_grads(self):
         
+        for batch in tqdm(self.dataloader):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+                output0 = model.gpt_neox.layers[0].mlp.output[0].grad.save()
+                output1 = model.gpt_neox.layers[1].mlp.output[0].grad.save()
+                output2 = model.gpt_neox.layers[2].mlp.output[0].grad.save()
+                output3 = model.gpt_neox.layers[3].mlp.output[0].grad.save()
+                output4 = model.gpt_neox.layers[4].mlp.output[0].grad.save()
+                output = model.embed_out.output.grad.save()
+                
+                model.output.logits.sum().backward()
+            
+        with open("data/grads.pkl", "wb") as f:
+            pickle.dump(self.model.lm_head.output.grad, f)
+            
+        return self.model.lm_head.output.grad
+
+    def norm(self):
         
+        with open("data/grads.pkl", "rb") as f:
+            grads = pickle.load(f)
+        
+        grads = np.linalg.norm(grads, axis=0)
+        
+        plt.figure(figsize=(10, 5))
+    
+    def normwmean(self):
+        pass
+
+
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
@@ -153,7 +187,7 @@ if __name__ == "__main__":
         with open("data/activation_embeds_prenorm.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
     except:
-        activation_embeds = activation_embeds_fn(model, val_dataloader)
+        activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
         with open("data/activation_embeds_prenorm.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
