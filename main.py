@@ -43,6 +43,37 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
             
     return activation_embeds
 
+
+def activation_embeds_fn_val_data(model, val_data, batch_size): # So it contains 5 layers and one last layer. 
+    model.eval()
+    
+    activation_embeds = {}
+    activation_embeds["layer 0"] = activation_embeds["layer 1"] = activation_embeds["layer 2"] = activation_embeds["layer 3"] = activation_embeds["layer 4"] = []
+    activation_embeds["last layer"] = []
+    
+    with t.no_grad():
+        for sample in tqdm(val_data):
+            
+            with model.trace(sample['text']) as tracer:
+                output0 = model.gpt_neox.layers[0].mlp.act.output.save()
+                output1 = model.gpt_neox.layers[1].mlp.act.output.save()
+                output2 = model.gpt_neox.layers[2].mlp.act.output.save()
+                output3 = model.gpt_neox.layers[3].mlp.act.output.save()
+                output4 = model.gpt_neox.layers[4].mlp.act.output.save()
+                output = model.embed_out.output.save()
+
+            # output0.shape -> (batch_size, 128, 2048)
+            activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
+            activation_embeds["layer 1"].append(t.norm(output1, dim = -1))
+            activation_embeds["layer 2"].append(t.norm(output2, dim = -1))
+            activation_embeds["layer 3"].append(t.norm(output3, dim = -1))
+            activation_embeds["layer 4"].append(t.norm(output4, dim = -1))
+            
+    with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
+        pickle.dump(activation_embeds, f)
+            
+    return activation_embeds
+
 def plotting(data, name):
     # Create the heatmap
     plt.figure(figsize=(10, 5))  # Set figure size
@@ -228,15 +259,15 @@ if __name__ == "__main__":
             pickle.dump(val_dataloader, f)
     
     try:
-        with open("data/activation_embeds_prenorm.pkl", "rb") as f:
+        with open("data/activation_embeds_prenorm_val_data.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
     except:
-        activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
-        with open("data/activation_embeds_prenorm.pkl", "wb") as f:
+        activation_embeds = activation_embeds_fn_val_data(model, val_data, args.batch_size)
+        with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
 
-    normed_class = normed(activation_embeds)
+    normed_class = normed(activation_embeds, val_data)
     normed_class.normwmean()
     normed_class.norm()
     
