@@ -22,7 +22,6 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
     
     with t.no_grad():
         for batch in tqdm(dataloader):
-            print(batch["input_ids"].shape)
             
             with model.trace(batch["input_ids"]) as tracer:
                 output0 = model.gpt_neox.layers[0].mlp.output[0].save()
@@ -33,7 +32,6 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
                 output = model.embed_out.output.save()
 
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            print(output0.shape)
             activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
             activation_embeds["layer 1"].append(t.norm(output1, dim = -1))
             activation_embeds["layer 2"].append(t.norm(output2, dim = -1))
@@ -48,7 +46,6 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
 
 def plotting(data, name):
     # Create the heatmap
-    data = np.transpose(data)  # Transpose the data to match the heatmap
     plt.figure(figsize=(10, 5))  # Set figure size
     plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
 
@@ -77,9 +74,11 @@ class normed:
         self.actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)
         self.actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)
         self.actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)
-        self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
-        assert self.actemb["layer 0"].shape == self.actemb["layer 1"].shape == self.actemb["layer 2"].shape == self.actemb["layer 3"].shape == self.actemb["layer 4"].shape == self.actemb["last layer"] == (128,)
+        print(self.actemb["layer 0"].shape)
+        
+        assert np.array(self.actemb["layer 0"]).shape == np.array(self.actemb["layer 1"]).shape == np.array(self.actemb["layer 2"]).shape == np.array(self.actemb["layer 3"]).shape == np.array(self.actemb["layer 4"]).shape == (128,)
         
     def norm(self):
         
@@ -96,13 +95,13 @@ class normed:
 
     def normwmean(self):
         
-        
+        epsilon = 1e-5
         actlistmean = np.array([
-            np.log(np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)), 
-            np.log(np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)),
-            np.log(np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)),
-            np.log(np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)),
-            np.log(np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)),
+            np.log(np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0) + epsilon), 
+            np.log(np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0) + epsilon),
+            np.log(np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0) + epsilon),
+            np.log(np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0) + epsilon),
+            np.log(np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0) + epsilon),
             # mean_acts["last layer"]
             ])
 
@@ -141,12 +140,12 @@ class gradients_norm:
                 model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            grad_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
-            grad_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
-            grad_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
-            grad_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
-            grad_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
-            grad_embeds["last layer"].append(t.norm(t.norm(output, dim = 0), dim = -1))
+            grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
+            grad_embeds["layer 1"].append(t.norm(output1, dim = -1))
+            grad_embeds["layer 2"].append(t.norm(output2, dim = -1))
+            grad_embeds["layer 3"].append(t.norm(output3, dim = -1))
+            grad_embeds["layer 4"].append(t.norm(output4, dim = -1))
+            grad_embeds["last layer"].append(t.norm(output, dim = -1))
             
         with open("data/grads.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
@@ -215,6 +214,11 @@ if __name__ == "__main__":
             pickle.dump(activation_embeds, f)
     
 
-    normed_class = normed(activation_embeds)
-    normed_class.normwmean()
-    normed_class.norm()
+    # normed_class = normed(activation_embeds)
+    # normed_class.normwmean()
+    # normed_class.norm()
+    
+    normed_grad = gradients_norm(model, val_dataloader)
+    normed_grad.norm()
+    normed_grad.normwmean()
+    
