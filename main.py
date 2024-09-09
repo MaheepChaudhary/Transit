@@ -24,20 +24,19 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
         for batch in tqdm(dataloader):
             
             with model.trace(batch["input_ids"]) as tracer:
-                output0 = model.gpt_neox.layers[0].mlp.output[0].save()
-                output1 = model.gpt_neox.layers[1].mlp.output[0].save()
-                output2 = model.gpt_neox.layers[2].mlp.output[0].save()
-                output3 = model.gpt_neox.layers[3].mlp.output[0].save()
-                output4 = model.gpt_neox.layers[4].mlp.output[0].save()
+                output0 = model.gpt_neox.layers[0].mlp.act.output.save()
+                output1 = model.gpt_neox.layers[1].mlp.act.output.save()
+                output2 = model.gpt_neox.layers[2].mlp.act.output.save()
+                output3 = model.gpt_neox.layers[3].mlp.act.output.save()
+                output4 = model.gpt_neox.layers[4].mlp.act.output.save()
                 output = model.embed_out.output.save()
 
-            # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
-            activation_embeds["layer 1"].append(t.norm(output1, dim = -1))
-            activation_embeds["layer 2"].append(t.norm(output2, dim = -1))
-            activation_embeds["layer 3"].append(t.norm(output3, dim = -1))
-            activation_embeds["layer 4"].append(t.norm(output4, dim = -1))
-            activation_embeds["last layer"].append(t.norm(output, dim = -1))
+            # output0.shape -> (batch_size, 128, 2048)
+            activation_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
+            activation_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
+            activation_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
+            activation_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
+            activation_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
             
     with open("data/activation_embeds_prenorm.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
@@ -152,6 +151,7 @@ class gradients_norm:
                 
                 self.model.output.logits.sum().backward()
             
+            print(output0)
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
             assert output0.shape == output1.shape == output2.shape == output3.shape == output4.shape == (128, 512)
             grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
@@ -214,8 +214,8 @@ if __name__ == "__main__":
     
     # model = LanguageModel("EleutherAI/pythia-70m", device_map=t.device("cuda" if t.cuda.is_available() else "mps"))
     model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
-    print(model)
     train_data, val_data = inspect_data(data)
+    print();print(model);print()
     
     try:
         with open(f"data/val_data_b{args.batch_size}.pkl", "rb") as f:
