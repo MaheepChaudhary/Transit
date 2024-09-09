@@ -53,11 +53,14 @@ def plotting(data, name):
     plt.colorbar()
 
     # Set labels
-    plt.xlabel('Dimensions')
-    plt.ylabel('Rows')
+    plt.xlabel('Tokens')
+    plt.ylabel('Layers')
 
     # Optionally, you can add titles
-    plt.title('Heatmap of 128-Dimension Data for 5 Rows')
+    if name == "figures/layer_seq_norm.png" or name == "figures/layer_seq_normwmean.png":
+        plt.title('Token activations in different layers')
+    elif name == "figures/grads_layer_seq_norm.png" or name == "figures/grad_layer_seq_normwmean.png":
+        plt.title('Token gradients in different layers')
 
     # Show the heatmap
     plt.savefig(name)
@@ -122,6 +125,16 @@ class gradients_norm:
         except:
             self.grads = self.get_grads()
     
+        assert np.array(self.grads["layer 0"]).shape[1] == 128
+        self.grads["layer 0"] = np.linalg.norm(self.grads["layer 0"], axis=0)
+        self.grads["layer 1"] = np.linalg.norm(self.grads["layer 1"], axis=0)
+        self.grads["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
+        self.grads["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
+        self.grads["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
+        # self.grads["last layer"] = np.linalg.norm(self.grads["last layer"], axis=0)
+        assert np.array(self.grads["layer 0"]).shape == np.array(self.grads["layer 1"]).shape == np.array(self.grads["layer 2"]).shape == np.array(self.grads["layer 3"]).shape == np.array(self.grads["layer 4"]).shape == (128,)
+    
+    
     def get_grads(self):
         
         grad_embeds = {}
@@ -155,19 +168,20 @@ class gradients_norm:
     def norm(self):
         
         # Additional norm calculations for nested structures
-        assert self.grads["layer 0"][1].shape == 128
-        self.grads["layer 0"] = np.linalg.norm(self.grads["layer 0"], axis=0)
-        self.grads["layer 1"] = np.linalg.norm(self.grads["layer 1"], axis=0)
-        self.grads["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
-        self.grads["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
-        self.grads["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
-        # self.grads["last layer"] = np.linalg.norm(self.grads["last layer"], axis=0)
+    
+        data_norm = np.array([
+            np.log(self.grads["layer 0"]),
+            np.log(self.grads["layer 1"]),
+            np.log(self.grads["layer 2"]),
+            np.log(self.grads["layer 3"]),
+            np.log(self.grads["layer 4"]),
+            ])
         
-        assert self.grads["layer 0"].shape == self.grads["layer 1"].shape == self.grads["layer 2"].shape == self.grads["layer 3"].shape == self.grads["layer 4"].shape == self.grads["last layer"] == (128,)
-        
-        plotting(data=self.grads, name = "figures/grads_layer_seq_norm.png")
+        plotting(data=data_norm, name = "figures/grads_layer_seq_norm.png")
     
     def normwmean(self):
+        
+        assert self.grads["layer 0"].shape == (128,)
         
         actlistmean = np.array([
             np.log(self.grads["layer 0"] - np.mean(self.grads["layer 0"], axis = 0)), 
@@ -178,7 +192,15 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
 
-        plotting(data=actlistmean, name = "figures/grad_layer_seq_normwmean.png")
+        data_normwmean = np.array([
+            np.log(self.grads["layer 0"]),
+            np.log(self.grads["layer 1"]),
+            np.log(self.grads["layer 2"]),
+            np.log(self.grads["layer 3"]),
+            np.log(self.grads["layer 4"]),
+            ])
+
+        plotting(data=data_normwmean, name = "figures/grad_layer_seq_normwmean.png")
 
 
 if __name__ == "__main__":
@@ -214,9 +236,9 @@ if __name__ == "__main__":
             pickle.dump(activation_embeds, f)
     
 
-    # normed_class = normed(activation_embeds)
-    # normed_class.normwmean()
-    # normed_class.norm()
+    normed_class = normed(activation_embeds)
+    normed_class.normwmean()
+    normed_class.norm()
     
     normed_grad = gradients_norm(model, val_dataloader)
     normed_grad.norm()
