@@ -61,10 +61,14 @@ def plotting(data, name):
     plt.ylabel('Layers')
 
     # Optionally, you can add titles
-    if name == "figures/layer_seq_norm.png" or name == "figures/layer_seq_normwmean.png":
+    if name == "figures/layer_seq_norm.png":
         plt.title('Token activations in different layers')
-    elif name == "figures/grads_layer_seq_norm.png" or name == "figures/grad_layer_seq_normwmean.png":
+    elif name == "figures/layer_seq_normwmean.png":
+        plt.title('Diff Mean Token activations in different layers')
+    elif name == "figures/grads_layer_seq_norm.png":
         plt.title('Token gradients in different layers')
+    elif name == "figures/grad_layer_seq_normwmean.png":
+        plt.title('Diff Mean Token gradients in different layers')
 
     # Show the heatmap
     plt.savefig(name)
