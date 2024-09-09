@@ -48,40 +48,6 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
     return activation_embeds
 
 
-def activation_embeds_fn_val_data(model, val_data, batch_size): 
-    model.eval()
-
-    # Proper initialization of the dictionary outside the loop
-    activation_embeds_new = {
-        "layer 0": [],
-        "layer 1": [],
-        "layer 2": [],
-        "layer 3": [],
-        "layer 4": []
-    }
-    
-    with t.no_grad():
-        for sample in tqdm(val_data):
-            
-            with model.trace(sample['text']) as tracer:
-                output0 = model.gpt_neox.layers[0].mlp.act.output.save()
-                output1 = model.gpt_neox.layers[1].mlp.act.output.save()
-                output2 = model.gpt_neox.layers[2].mlp.act.output.save()
-                output3 = model.gpt_neox.layers[3].mlp.act.output.save()
-                output4 = model.gpt_neox.layers[4].mlp.act.output.save()
-                
-            activation_embeds_new["layer 0"].append(t.norm(output0, dim=-1))
-            activation_embeds_new["layer 1"].append(t.norm(output1, dim=-1))
-            activation_embeds_new["layer 2"].append(t.norm(output2, dim=-1))
-            activation_embeds_new["layer 3"].append(t.norm(output3, dim=-1))
-            activation_embeds_new["layer 4"].append(t.norm(output4, dim=-1))
-
-            
-    with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
-        pickle.dump(activation_embeds, f)
-            
-    return activation_embeds
-
 def plotting(data, name):
     # Create the heatmap
     plt.figure(figsize=(10, 5))  # Set figure size
@@ -109,7 +75,6 @@ class normed:
         self.actemb = actemb
 
         # Additional norm calculations for nested structures
-        print(np.array(self.actemb["layer 0"]).shape)
         # assert np.array(self.actemb["layer 0"]).shape[1] == 128
         self.actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)
         self.actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)
@@ -117,8 +82,6 @@ class normed:
         self.actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)
         self.actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
-        
-        print(self.actemb["layer 0"].shape)
         
         
     def norm(self):
@@ -175,8 +138,14 @@ class gradients_norm:
     
     def get_grads(self):
         
-        grad_embeds = {}
-        grad_embeds["layer 0"] = grad_embeds["layer 1"] = grad_embeds["layer 2"] = grad_embeds["layer 3"] = grad_embeds["layer 4"] = []
+        grad_embeds = {
+        "layer 0": [],
+        "layer 1": [],
+        "layer 2": [],
+        "layer 3": [],
+        "layer 4": []
+        }
+        
         
         for batch in tqdm(self.dataloader):
             
@@ -190,7 +159,6 @@ class gradients_norm:
                 
                 self.model.output.logits.sum().backward()
             
-            print(output0)
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
             assert output0.shape == output1.shape == output2.shape == output3.shape == output4.shape == (128, 512)
             grad_embeds["layer 0"].append(t.norm(output0, dim = -1))
