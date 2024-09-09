@@ -189,25 +189,16 @@ class gradients_norm:
     def normwmean(self):
         
         assert self.grads["layer 0"].shape == (128,)
+        epsilon = 1e-5
+        gradlistmean = np.array([
+            np.log(np.array(self.grads["layer 0"]) - np.mean(np.array(self.grads["layer 0"]), axis = 0) + epsilon),
+            np.log(np.array(self.grads["layer 1"]) - np.mean(np.array(self.grads["layer 1"]), axis = 0) + epsilon),
+            np.log(np.array(self.grads["layer 2"]) - np.mean(np.array(self.grads["layer 2"]), axis = 0) + epsilon),
+            np.log(np.array(self.grads["layer 3"]) - np.mean(np.array(self.grads["layer 3"]), axis = 0) + epsilon),
+            np.log(np.array(self.grads["layer 4"]) - np.mean(np.array(self.grads["layer 4"]), axis = 0) + epsilon),
+        ])  
         
-        actlistmean = np.array([
-            np.log(self.grads["layer 0"] - np.mean(self.grads["layer 0"], axis = 0)), 
-            np.log(self.grads["layer 1"] - np.mean(self.grads["layer 1"], axis = 0)), 
-            np.log(self.grads["layer 2"] - np.mean(self.grads["layer 2"], axis = 0)), 
-            np.log(self.grads["layer 3"] - np.mean(self.grads["layer 3"], axis = 0)), 
-            np.log(self.grads["layer 4"] - np.mean(self.grads["layer 4"], axis = 0)), 
-            # mean_acts["last layer"]
-            ])
-
-        data_normwmean = np.array([
-            np.log(self.grads["layer 0"]),
-            np.log(self.grads["layer 1"]),
-            np.log(self.grads["layer 2"]),
-            np.log(self.grads["layer 3"]),
-            np.log(self.grads["layer 4"]),
-            ])
-
-        plotting(data=data_normwmean, name = "figures/grad_layer_seq_normwmean.png")
+        plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean.png")
 
 
 if __name__ == "__main__":
