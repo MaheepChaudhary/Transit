@@ -212,6 +212,37 @@ class gradients_norm:
         
         # Additional norm calculations for nested structures
         # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        grad_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        
+        grad_actemb["layer 0"] = np.linalg.norm(self.grads["layer 0"], axis=0)
+        grad_actemb["layer 1"] = np.linalg.norm(self.grads["layer 1"], axis=0)
+        grad_actemb["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
+        grad_actemb["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
+        grad_actemb["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        gradlist = np.array([
+            np.log(np.array(grad_actemb["layer 0"])),
+            np.log(np.array(grad_actemb["layer 1"])),
+            np.log(np.array(grad_actemb["layer 2"])),
+            np.log(np.array(grad_actemb["layer 3"])),
+            np.log(np.array(grad_actemb["layer 4"])),
+            # mean_acts["last layer"]
+            ])
+        
+        plotting(data=gradlist, name = "figures/grads_layer_seq_norm.png")
+    
+    def normwmean(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
         normwmean_grad = {
             "layer 0": [],
             "layer 1": [],
@@ -228,11 +259,11 @@ class gradients_norm:
             "layer 4": []
         }
         
-        normwmean_grad["layer 0"] = np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)
-        normwmean_grad["layer 1"] = np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)
-        normwmean_grad["layer 2"] = np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)
-        normwmean_grad["layer 3"] = np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)
-        normwmean_grad["layer 4"] = np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)
+        normwmean_grad["layer 0"] = np.array(self.grads["layer 0"]) - np.mean(np.array(self.grads["layer 0"]), axis = 0)
+        normwmean_grad["layer 1"] = np.array(self.grads["layer 1"]) - np.mean(np.array(self.grads["layer 1"]), axis = 0)
+        normwmean_grad["layer 2"] = np.array(self.grads["layer 2"]) - np.mean(np.array(self.grads["layer 2"]), axis = 0)
+        normwmean_grad["layer 3"] = np.array(self.grads["layer 3"]) - np.mean(np.array(self.grads["layer 3"]), axis = 0)
+        normwmean_grad["layer 4"] = np.array(self.grads["layer 4"]) - np.mean(np.array(self.grads["layer 4"]), axis = 0)
         
         normwmean_grad_mod["layer 0"] = np.linalg.norm(normwmean_grad["layer 0"], axis=0)
         normwmean_grad_mod["layer 1"] = np.linalg.norm(normwmean_grad["layer 1"], axis=0)
@@ -250,20 +281,6 @@ class gradients_norm:
             np.log(np.array(normwmean_grad_mod["layer 4"])),
             # mean_acts["last layer"]
             ])
-        
-        plotting(data=gradlistmean, name = "figures/grads_layer_seq_norm.png")
-    
-    def normwmean(self):
-        
-        assert self.grads["layer 0"].shape == (128,)
-        epsilon = 1e-5
-        gradlistmean = np.array([
-            np.log(np.array(self.grads["layer 0"]) - np.mean(np.array(self.grads["layer 0"]), axis = 0) + epsilon),
-            np.log(np.array(self.grads["layer 1"]) - np.mean(np.array(self.grads["layer 1"]), axis = 0) + epsilon),
-            np.log(np.array(self.grads["layer 2"]) - np.mean(np.array(self.grads["layer 2"]), axis = 0) + epsilon),
-            np.log(np.array(self.grads["layer 3"]) - np.mean(np.array(self.grads["layer 3"]), axis = 0) + epsilon),
-            np.log(np.array(self.grads["layer 4"]) - np.mean(np.array(self.grads["layer 4"]), axis = 0) + epsilon),
-        ])  
         
         plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean.png")
 
