@@ -16,9 +16,13 @@ def create_dataloader(tokenized_data, batch_size=2):
 def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 layers and one last layer. 
     model.eval()
     
-    activation_embeds = {}
-    activation_embeds["layer 0"] = activation_embeds["layer 1"] = activation_embeds["layer 2"] = activation_embeds["layer 3"] = activation_embeds["layer 4"] = []
-    activation_embeds["last layer"] = []
+    activation_embeds = {
+        "layer 0": [],
+        "layer 1": [],
+        "layer 2": [],
+        "layer 3": [],
+        "layer 4": []
+    }
     
     with t.no_grad():
         for batch in tqdm(dataloader):
@@ -44,12 +48,17 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
     return activation_embeds
 
 
-def activation_embeds_fn_val_data(model, val_data, batch_size): # So it contains 5 layers and one last layer. 
+def activation_embeds_fn_val_data(model, val_data, batch_size): 
     model.eval()
-    
-    activation_embeds = {}
-    activation_embeds["layer 0"] = activation_embeds["layer 1"] = activation_embeds["layer 2"] = activation_embeds["layer 3"] = activation_embeds["layer 4"] = []
-    activation_embeds["last layer"] = []
+
+    # Proper initialization of the dictionary outside the loop
+    activation_embeds_new = {
+        "layer 0": [],
+        "layer 1": [],
+        "layer 2": [],
+        "layer 3": [],
+        "layer 4": []
+    }
     
     with t.no_grad():
         for sample in tqdm(val_data):
@@ -60,14 +69,13 @@ def activation_embeds_fn_val_data(model, val_data, batch_size): # So it contains
                 output2 = model.gpt_neox.layers[2].mlp.act.output.save()
                 output3 = model.gpt_neox.layers[3].mlp.act.output.save()
                 output4 = model.gpt_neox.layers[4].mlp.act.output.save()
-                output = model.embed_out.output.save()
+                
+            activation_embeds_new["layer 0"].append(t.norm(output0, dim=-1))
+            activation_embeds_new["layer 1"].append(t.norm(output1, dim=-1))
+            activation_embeds_new["layer 2"].append(t.norm(output2, dim=-1))
+            activation_embeds_new["layer 3"].append(t.norm(output3, dim=-1))
+            activation_embeds_new["layer 4"].append(t.norm(output4, dim=-1))
 
-            # output0.shape -> (batch_size, 128, 2048)
-            activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
-            activation_embeds["layer 1"].append(t.norm(output1, dim = -1))
-            activation_embeds["layer 2"].append(t.norm(output2, dim = -1))
-            activation_embeds["layer 3"].append(t.norm(output3, dim = -1))
-            activation_embeds["layer 4"].append(t.norm(output4, dim = -1))
             
     with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
@@ -259,25 +267,15 @@ if __name__ == "__main__":
             pickle.dump(val_dataloader, f)
     
     try:
-        with open("data/activation_embeds_prenorm_val_data.pkl", "rb") as f:
+        with open("data/activation_embeds_prenorm.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
     except:
-        activation_embeds = activation_embeds_fn_val_data(model, val_data, args.batch_size)
-        with open("data/activation_embeds_prenorm_val_data.pkl", "wb") as f:
+        activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
+        with open("data/activation_embeds_prenorm.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
-    layer0act = pad_to_equal_shape(activation_embeds["layer 0"])
-    layer1act = pad_to_equal_shape(activation_embeds["layer 1"])
-    layer2act = pad_to_equal_shape(activation_embeds["layer 2"])
-    layer3act = pad_to_equal_shape(activation_embeds["layer 3"])
-    layer4act = pad_to_equal_shape(activation_embeds["layer 4"])
-    
-    pprint(activation_embeds["layer 0"][0])
-    pprint(activation_embeds["layer 1"][0])
-    pprint(activation_embeds["layer 2"][0])
-    pprint(activation_embeds["layer 3"][0])
-    pprint(activation_embeds["layer 4"][0])
-    normed_class = normed({"layer 0": layer0act, "layer 1": layer1act, "layer 2": layer2act, "layer 3": layer3act, "layer 4": layer4act})
+
+    normed_class = normed(activation_embeds)
     normed_class.normwmean()
     normed_class.norm()
     
