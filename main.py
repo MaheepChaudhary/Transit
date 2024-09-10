@@ -148,18 +148,19 @@ class single_sample_grad_norm:
         random_samples = random.sample(self.data["text"], 20)
         for index, sample in enumerate(random_samples):
             with self.model.trace(sample) as tracer:
-                output0 = self.model.gpt_neox.layers[0].mlp.act.output.grad.save()
-                output1 = self.model.gpt_neox.layers[1].mlp.act.output.grad.save()
-                output2 = self.model.gpt_neox.layers[2].mlp.act.output.grad.save()
-                output3 = self.model.gpt_neox.layers[3].mlp.act.output.grad.save()
-                output4 = self.model.gpt_neox.layers[4].mlp.act.output.grad.save()
+                output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].output[0].grad.save()
             
-            for i,j in enumerate([output0, output1, output2, output3, output4]):    
+            for i,j in enumerate([output0, output1, output2, output3, output4]):
+                print(j)    
                 act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
-            
+
         return act_dict
     
-    def norm(self):
+    def grad_norm(self):
         
         gradients = self.gradients()
         for index in range(len(gradients["layer 0"])):
@@ -502,6 +503,6 @@ if __name__ == "__main__":
     # img_concat()
     
     grad_normed_single = single_sample_grad_norm(model, val_data)
-    grad_normed_single.norm()
+    grad_normed_single.grad_norm()
     
     img_concat()
