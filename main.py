@@ -62,9 +62,9 @@ class single_sample_act_norm:
             "layer 3": [],
             "layer 4": []
         }
-        random_samples = random.sample(self.data, 20)
+        random_samples = random.sample(self.data["text"], 20)
         for index, sample in enumerate(random_samples):
-            with self.model.trace(sample['text']) as tracer:
+            with self.model.trace(sample) as tracer:
                 output0 = self.model.gpt_neox.layers[0].mlp.act.output.save()
                 output1 = self.model.gpt_neox.layers[1].mlp.act.output.save()
                 output2 = self.model.gpt_neox.layers[2].mlp.act.output.save()
@@ -89,7 +89,7 @@ class single_sample_act_norm:
                 activations["layer 4"][index].squeeze(0).squeeze(0)]
             )
                 
-            self.plot(data=data, name=f"mfigures/single_sample_{index}.png")
+            self.plot(data=data, name=f"mfigures_norm/single_sample_{index}.png")
     
     def plot(self, data, name):
         plt.figure(figsize=(10, 5))
@@ -99,6 +99,7 @@ class single_sample_act_norm:
         plt.ylabel('Layers')
         plt.title('Single Sample Token activations in different layers')
         plt.savefig(name)
+        plt.close()
             
 
 def plotting(data, name):
@@ -125,6 +126,91 @@ def plotting(data, name):
 
     # Show the heatmap
     plt.savefig(name)
+    plt.close()
+    
+
+
+class single_sample_grad_norm:
+    
+    def __init__(self, model, data):
+        self.model = model
+        self.data = data
+    
+    def gradients(self):
+        
+        act_dict = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        random_samples = random.sample(self.data["text"], 20)
+        for index, sample in enumerate(random_samples):
+            with self.model.trace(sample) as tracer:
+                output0 = self.model.gpt_neox.layers[0].mlp.act.output.grad.save()
+                output1 = self.model.gpt_neox.layers[1].mlp.act.output.grad.save()
+                output2 = self.model.gpt_neox.layers[2].mlp.act.output.grad.save()
+                output3 = self.model.gpt_neox.layers[3].mlp.act.output.grad.save()
+                output4 = self.model.gpt_neox.layers[4].mlp.act.output.grad.save()
+            
+            for i,j in enumerate([output0, output1, output2, output3, output4]):    
+                act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
+            
+        return act_dict
+    
+    def norm(self):
+        
+        gradients = self.gradients()
+        for index in range(len(gradients["layer 0"])):
+            grad_data = np.array(
+                [gradients["layer 0"][index].squeeze(0).squeeze(0),
+                gradients["layer 1"][index].squeeze(0).squeeze(0),
+                gradients["layer 2"][index].squeeze(0).squeeze(0),
+                gradients["layer 3"][index].squeeze(0).squeeze(0),
+                gradients["layer 4"][index].squeeze(0).squeeze(0)]
+            )
+                
+            self.plot(data=grad_data, name=f"mfigures_gradnorm/single_sample_{index}.png")
+    
+    def plot(self, data, name):
+        plt.figure(figsize=(10, 5))
+        plt.imshow(data, aspect='auto', cmap='viridis')
+        plt.colorbar()
+        plt.xlabel('Tokens')
+        plt.ylabel('Layers')
+        plt.title('Single Sample Token activations in different layers')
+        plt.savefig(name)
+        plt.close()
+            
+
+def plotting(data, name):
+    # Create the heatmap
+    plt.figure(figsize=(10, 5))  # Set figure size
+    plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+    # Add color bar to indicate the scale
+    plt.colorbar()
+
+    # Set labels
+    plt.xlabel('Tokens')
+    plt.ylabel('Layers')
+
+    # Optionally, you can add titles
+    if name == "figures/layer_seq_norm.png":
+        plt.title('Token activations in different layers')
+    elif name == "figures/layer_seq_normwmean.png":
+        plt.title('Diff Mean Token activations in different layers')
+    elif name == "figures/grads_layer_seq_norm.png":
+        plt.title('Token gradients in different layers')
+    elif name == "figures/grad_layer_seq_normwmean.png":
+        plt.title('Diff Mean Token gradients in different layers')
+
+    # Show the heatmap
+    plt.savefig(name)
+    plt.close()
+    
+    
 
 class normed:
 
@@ -345,7 +431,7 @@ class gradients_norm:
 def img_concat():
 
     # List of image file paths (assuming you have 22 image paths)
-    image_paths = ["mfigures/" + img for img in os.listdir("mfigures")]
+    image_paths = ["mfigures_gradnorm/" + img for img in os.listdir("mfigures_gradnorm")]
 
     # Determine the grid size, for example, 5 rows and 5 columns
     rows = 5
@@ -366,7 +452,7 @@ def img_concat():
 
     # Save the combined image or display it
     plt.tight_layout()
-    plt.savefig("mfigures/combined_image.png")
+    plt.savefig("mfigures_gradnorm/combined_image.png")
 
 
 if __name__ == "__main__":
@@ -412,5 +498,10 @@ if __name__ == "__main__":
     
     # normed_single = single_sample_act_norm(model, val_data)
     # normed_single.norm()
+    
+    # img_concat()
+    
+    grad_normed_single = single_sample_grad_norm(model, val_data)
+    grad_normed_single.norm()
     
     img_concat()
