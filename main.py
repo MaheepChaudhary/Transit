@@ -47,7 +47,7 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
             
     return activation_embeds
 
-class single_sample_act_norm(model, data):
+class single_sample_act_norm:
     
     def __init__(self, model, data):
         self.model = model
@@ -62,10 +62,9 @@ class single_sample_act_norm(model, data):
             "layer 3": [],
             "layer 4": []
         }
-        
-        for index, sample in enumerate(self.data):
-            
-            with self.model.trace(sample) as tracer:
+        random_samples = random.sample(self.data, 20)
+        for index, sample in enumerate(random_samples):
+            with self.model.trace(sample['text']) as tracer:
                 output0 = self.model.gpt_neox.layers[0].mlp.act.output.save()
                 output1 = self.model.gpt_neox.layers[1].mlp.act.output.save()
                 output2 = self.model.gpt_neox.layers[2].mlp.act.output.save()
@@ -74,23 +73,23 @@ class single_sample_act_norm(model, data):
                 output = self.model.embed_out.output.save()
             
             for i,j in enumerate([output0, output1, output2, output3, output4]):    
-                act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1)]))
-            
-            if index > 20:
-                break
+                act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
             
         return act_dict
     
     def norm(self):
         
         activations = self.activation()
-        assert activations["layer 0"][0].shape == (128,)
-        for index in range(activations["layer 0"].shape[0]):
-            self.plot(data=activations["layer 0"][index], name = f"mfigures/layer0_seq_norm_{index}.png")
-            self.plot(data=activations["layer 1"][index], name = f"mfigures/layer1_seq_norm_{index}.png")
-            self.plot(data=activations["layer 2"][index], name = f"mfigures/layer2_seq_norm_{index}.png")
-            self.plot(data=activations["layer 3"][index], name = f"mfigures/layer3_seq_norm_{index}.png")
-            self.plot(data=activations["layer 4"][index], name = f"mfigures/layer4_seq_norm_{index}.png")
+        for index in range(len(activations["layer 0"])):
+            data = np.array(
+                [activations["layer 0"][index].squeeze(0).squeeze(0),
+                activations["layer 1"][index].squeeze(0).squeeze(0),
+                activations["layer 2"][index].squeeze(0).squeeze(0),
+                activations["layer 3"][index].squeeze(0).squeeze(0),
+                activations["layer 4"][index].squeeze(0).squeeze(0)]
+            )
+                
+            self.plot(data=data, name=f"mfigures/single_sample_{index}.png")
     
     def plot(self, data, name):
         plt.figure(figsize=(10, 5))
@@ -343,6 +342,33 @@ class gradients_norm:
         plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean_grad_resid.png")
 
 
+def img_concat():
+
+    # List of image file paths (assuming you have 22 image paths)
+    image_paths = ["mfigures/" + img for img in os.listdir("mfigures")]
+
+    # Determine the grid size, for example, 5 rows and 5 columns
+    rows = 5
+    cols = 4
+
+    # Create a figure to hold the grid
+    fig, axes = plt.subplots(rows, cols, figsize=(20, 20))
+
+    # Flatten the axes array for easy iteration
+    axes = axes.flatten()
+
+    # Loop over images and axes and plot each image
+    for i, (img_path, ax) in enumerate(zip(image_paths, axes)):
+        if i < len(image_paths):
+            img = mpimg.imread(img_path)
+            ax.imshow(img)
+        ax.axis('off')  # Hide the axes
+
+    # Save the combined image or display it
+    plt.tight_layout()
+    plt.savefig("mfigures/combined_image.png")
+
+
 if __name__ == "__main__":
     
     parser = argparse.ArgumentParser()
@@ -384,5 +410,7 @@ if __name__ == "__main__":
     # normed_grad.norm()
     # normed_grad.normwmean()
     
-    normed_single = single_sample_act_norm(model, val_data)
-    normed_single.norm()
+    # normed_single = single_sample_act_norm(model, val_data)
+    # normed_single.norm()
+    
+    img_concat()

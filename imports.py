@@ -26,6 +26,7 @@ from tqdm import tqdm
 # from transformer_lens import ActivationCache, HookedTransformer, utils
 from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer
 import gc
+import matplotlib.image as mpimg
 
 import wandb
 # from e2e_sae import SAETransformer
