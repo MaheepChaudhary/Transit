@@ -47,6 +47,60 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
             
     return activation_embeds
 
+class single_sample_act_norm(model, data):
+    
+    def __init__(self, model, data):
+        self.model = model
+        self.data = data
+    
+    def activation(self):
+        
+        act_dict = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        for index, sample in enumerate(self.data):
+            
+            with self.model.trace(sample) as tracer:
+                output0 = self.model.gpt_neox.layers[0].mlp.act.output.save()
+                output1 = self.model.gpt_neox.layers[1].mlp.act.output.save()
+                output2 = self.model.gpt_neox.layers[2].mlp.act.output.save()
+                output3 = self.model.gpt_neox.layers[3].mlp.act.output.save()
+                output4 = self.model.gpt_neox.layers[4].mlp.act.output.save()
+                output = self.model.embed_out.output.save()
+            
+            for i,j in enumerate([output0, output1, output2, output3, output4]):    
+                act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1)]))
+            
+            if index > 20:
+                break
+            
+        return act_dict
+    
+    def norm(self):
+        
+        activations = self.activation()
+        assert activations["layer 0"][0].shape == (128,)
+        for index in range(activations["layer 0"].shape[0]):
+            self.plot(data=activations["layer 0"][index], name = f"mfigures/layer0_seq_norm_{index}.png")
+            self.plot(data=activations["layer 1"][index], name = f"mfigures/layer1_seq_norm_{index}.png")
+            self.plot(data=activations["layer 2"][index], name = f"mfigures/layer2_seq_norm_{index}.png")
+            self.plot(data=activations["layer 3"][index], name = f"mfigures/layer3_seq_norm_{index}.png")
+            self.plot(data=activations["layer 4"][index], name = f"mfigures/layer4_seq_norm_{index}.png")
+    
+    def plot(self, data, name):
+        plt.figure(figsize=(10, 5))
+        plt.imshow(data, aspect='auto', cmap='viridis')
+        plt.colorbar()
+        plt.xlabel('Tokens')
+        plt.ylabel('Layers')
+        plt.title('Single Sample Token activations in different layers')
+        plt.savefig(name)
+            
 
 def plotting(data, name):
     # Create the heatmap
@@ -169,7 +223,7 @@ class gradients_norm:
         self.dataloader = dataloader
         
         try:
-            with open("data/grads.pkl", "rb") as f:
+            with open("data/grads_resid.pkl", "rb") as f:
                 grads = pickle.load(f)    
             self.grads = grads  
         except:
@@ -192,11 +246,11 @@ class gradients_norm:
             
             with self.model.trace(batch["input_ids"]) as tracer:
             
-                output0 = self.model.gpt_neox.layers[0].mlp.output.grad.save()
-                output1 = self.model.gpt_neox.layers[1].mlp.output.grad.save()
-                output2 = self.model.gpt_neox.layers[2].mlp.output.grad.save()
-                output3 = self.model.gpt_neox.layers[3].mlp.output.grad.save()
-                output4 = self.model.gpt_neox.layers[4].mlp.output.grad.save()
+                output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].output[0].grad.save()
                 
                 self.model.output.logits.sum().backward()
             
@@ -207,7 +261,7 @@ class gradients_norm:
             grad_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
             grad_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
             
-        with open("data/grads.pkl", "wb") as f:
+        with open("data/grads_resid.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
             
         return grad_embeds
@@ -241,7 +295,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlist, name = "figures/grads_layer_seq_norm.png")
+        plotting(data=gradlist, name = "figures/grads_layer_seq_norm_grad_resid.png")
     
     def normwmean(self):
         
@@ -286,7 +340,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean.png")
+        plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean_grad_resid.png")
 
 
 if __name__ == "__main__":
@@ -322,11 +376,13 @@ if __name__ == "__main__":
             pickle.dump(activation_embeds, f)
     
 
-    normed_class = normed(activation_embeds)
-    normed_class.normwmean()
-    normed_class.norm()
+    # normed_class = normed(activation_embeds)
+    # normed_class.normwmean()
+    # normed_class.norm()
     
-    normed_grad = gradients_norm(model, val_dataloader)
-    normed_grad.norm()
-    normed_grad.normwmean()
+    # normed_grad = gradients_norm(model, val_dataloader)
+    # normed_grad.norm()
+    # normed_grad.normwmean()
     
+    normed_single = single_sample_act_norm(model, val_data)
+    normed_single.norm()
