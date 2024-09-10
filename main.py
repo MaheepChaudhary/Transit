@@ -210,8 +210,7 @@ def plotting(data, name):
     # Show the heatmap
     plt.savefig(name)
     plt.close()
-    
-    
+
 
 class normed:
 
