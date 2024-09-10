@@ -148,11 +148,12 @@ class single_sample_grad_norm:
         random_samples = random.sample(self.data["text"], 20)
         for index, sample in enumerate(random_samples):
             with self.model.trace(sample) as tracer:
-                output0 = self.model.gpt_neox.layers[0].output.mlp.act.grad.save()
-                output1 = self.model.gpt_neox.layers[1].output.mlp.act.grad.save()
-                output2 = self.model.gpt_neox.layers[2].output.mlp.act.grad.save()
-                output3 = self.model.gpt_neox.layers[3].output.mlp.act.grad.save()
-                output4 = self.model.gpt_neox.layers[4].output.mlp.act.grad.save()
+                output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].output[0].grad.save()
+                self.model.output.logits.sum().backward()
             
             for i,j in enumerate([output0, output1, output2, output3, output4]):
                 print(j)    
