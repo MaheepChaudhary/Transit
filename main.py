@@ -156,7 +156,6 @@ class single_sample_grad_norm:
                 self.model.output.logits.sum().backward()
             
             for i,j in enumerate([output0, output1, output2, output3, output4]):
-                print(j)    
                 act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
 
         return act_dict
