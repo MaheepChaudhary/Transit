@@ -60,19 +60,32 @@ class single_sample_act_norm:
             "layer 1": [],
             "layer 2": [],
             "layer 3": [],
-            "layer 4": []
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": []
         }
-        random_samples = random.sample(self.data["text"], 20)
+        random_indices = random.sample(range(len(self.data)), 20)
+        random_samples = [self.data[i] for i in random_indices]
         for index, sample in enumerate(random_samples):
-            with self.model.trace(sample) as tracer:
-                output0 = self.model.gpt_neox.layers[0].mlp.act.output.save()
-                output1 = self.model.gpt_neox.layers[1].mlp.act.output.save()
-                output2 = self.model.gpt_neox.layers[2].mlp.act.output.save()
-                output3 = self.model.gpt_neox.layers[3].mlp.act.output.save()
-                output4 = self.model.gpt_neox.layers[4].mlp.act.output.save()
-                output = self.model.embed_out.output.save()
+            with self.model.trace(sample['text']) as tracer:
+                output0 = self.model.transformer.h[0].output[0].save()
+                output1 = self.model.transformer.h[1].output[0].save()
+                output2 = self.model.transformer.h[2].output[0].save()
+                output3 = self.model.transformer.h[3].output[0].save()
+                output4 = self.model.transformer.h[4].output[0].save()
+                output5 = self.model.transformer.h[5].output[0].save()
+                output6 = self.model.transformer.h[6].output[0].save()
+                output7 = self.model.transformer.h[7].output[0].save()
+                output8 = self.model.transformer.h[8].output[0].save()
+                output9 = self.model.transformer.h[9].output[0].save()
+                output10 = self.model.transformer.h[10].output[0].save()
+                # output = self.model.embed_out.output.save()
             
-            for i,j in enumerate([output0, output1, output2, output3, output4]):    
+            for i,j in enumerate([output0, output1, output2, output3, output4, output5, output6, output7, output8, output9, output10]):    
                 act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
             
         return act_dict
@@ -82,17 +95,24 @@ class single_sample_act_norm:
         activations = self.activation()
         for index in range(len(activations["layer 0"])):
             data = np.array(
-                [activations["layer 0"][index].squeeze(0).squeeze(0),
-                activations["layer 1"][index].squeeze(0).squeeze(0),
-                activations["layer 2"][index].squeeze(0).squeeze(0),
-                activations["layer 3"][index].squeeze(0).squeeze(0),
-                activations["layer 4"][index].squeeze(0).squeeze(0)]
+                [np.log(activations["layer 0"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 1"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 2"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 3"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 4"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 5"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 6"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 7"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 8"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 9"][index].squeeze(0).squeeze(0)),
+                np.log(activations["layer 10"][index].squeeze(0).squeeze(0)),
+                ]
             )
                 
             self.plot(data=data, name=f"mfigures_norm/single_sample_{index}.png")
     
     def plot(self, data, name):
-        plt.figure(figsize=(10, 5))
+        plt.figure(figsize=(10, 11))
         plt.imshow(data, aspect='auto', cmap='viridis')
         plt.colorbar()
         plt.xlabel('Tokens')
@@ -147,8 +167,7 @@ class single_sample_grad_norm:
         }
             
         random_indices = random.sample(range(len(self.data)), 20)
-        # random_samples = [self.data[i] for i in random_indices]
-        random_samples = [{"text":"Hello world. How are you?"} for i in range(20)]
+        random_samples = [self.data[i] for i in random_indices]
         for index, sample in enumerate(random_samples):
             pprint(sample['text'])
             print()
@@ -192,7 +211,7 @@ class single_sample_grad_norm:
         plt.title('Single Sample Token activations in different layers')
         plt.savefig(name)
         plt.close()
-            
+
 
 def plotting(data, name):
     # Create the heatmap
@@ -474,7 +493,8 @@ if __name__ == "__main__":
     
     
     # model = LanguageModel("EleutherAI/pythia-70m", device_map=t.device("cuda" if t.cuda.is_available() else "mps"))
-    model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
+    # model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
+    model = LanguageModel("openai-community/gpt2", device_map = "cpu")
     train_data, val_data = inspect_data(data)
     print();print(model);print()
     
@@ -505,12 +525,12 @@ if __name__ == "__main__":
     # normed_grad.norm()
     # normed_grad.normwmean()
     
-    # normed_single = single_sample_act_norm(model, val_data)
-    # normed_single.norm()
-    
-    # img_concat()
-    
-    grad_normed_single = single_sample_grad_norm(model, train_data)
-    grad_normed_single.grad_norm()
+    normed_single = single_sample_act_norm(model, val_data)
+    normed_single.norm()
     
     img_concat()
+    
+    # grad_normed_single = single_sample_grad_norm(model, train_data)
+    # grad_normed_single.grad_norm()
+    
+    # img_concat()
