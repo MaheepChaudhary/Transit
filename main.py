@@ -304,11 +304,11 @@ class normed:
         normwmean_actemb["layer 3"] = np.mean(self.actemb["layer 3"], axis=0)
         normwmean_actemb["layer 4"] = np.mean(self.actemb["layer 4"], axis=0)
         
-        normwmean_actemb["layer 0"] = np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)
-        normwmean_actemb["layer 1"] = np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)
-        normwmean_actemb["layer 2"] = np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)
-        normwmean_actemb["layer 3"] = np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)
-        normwmean_actemb["layer 4"] = np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)
+        normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
+        normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
+        normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
+        normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
+        normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
         
         
         actlistmean = np.array([
@@ -331,7 +331,7 @@ class gradients_norm:
         self.dataloader = dataloader
         
         try:
-            with open("data/grads_resid.pkl", "rb") as f:
+            with open("data/grads_post_mlp_addn_resid.pkl", "rb") as f:
                 grads = pickle.load(f)    
             self.grads = grads  
         except:
@@ -363,13 +363,13 @@ class gradients_norm:
                 self.model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            grad_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
-            grad_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
-            grad_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
-            grad_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
-            grad_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
+            grad_embeds["layer 0"].append(np.mean(t.norm(output0, dim = -1)), dim = 0)
+            grad_embeds["layer 1"].append(np.mean(t.norm(output1, dim = -1)), dim = 0)
+            grad_embeds["layer 2"].append(np.mean(t.norm(output2, dim = -1)), dim = 0)
+            grad_embeds["layer 3"].append(np.mean(t.norm(output3, dim = -1)), dim = 0)
+            grad_embeds["layer 4"].append(np.mean(t.norm(output4, dim = -1)), dim = 0)
             
-        with open("data/grads_resid.pkl", "wb") as f:
+        with open("data/grads_post_mlp_addn_resid.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
             
         return grad_embeds
@@ -387,11 +387,11 @@ class gradients_norm:
         }
         
         
-        grad_actemb["layer 0"] = np.linalg.norm(self.grads["layer 0"], axis=0)
-        grad_actemb["layer 1"] = np.linalg.norm(self.grads["layer 1"], axis=0)
-        grad_actemb["layer 2"] = np.linalg.norm(self.grads["layer 2"], axis=0)
-        grad_actemb["layer 3"] = np.linalg.norm(self.grads["layer 3"], axis=0)
-        grad_actemb["layer 4"] = np.linalg.norm(self.grads["layer 4"], axis=0)
+        grad_actemb["layer 0"] = np.mean(self.grads["layer 0"], axis=0)
+        grad_actemb["layer 1"] = np.mean(self.grads["layer 1"], axis=0)
+        grad_actemb["layer 2"] = np.mean(self.grads["layer 2"], axis=0)
+        grad_actemb["layer 3"] = np.mean(self.grads["layer 3"], axis=0)
+        grad_actemb["layer 4"] = np.mean(self.grads["layer 4"], axis=0)
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
         gradlist = np.array([
@@ -403,7 +403,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlist, name = "figures/grads_layer_seq_norm_grad_resid.png")
+        plotting(data=gradlist, name = "figures/grads_layer_seq_norm_grad_post_mlp_addn_resid.png")
     
     def normwmean(self):
         
@@ -425,17 +425,18 @@ class gradients_norm:
             "layer 4": []
         }
         
-        normwmean_grad["layer 0"] = np.array(self.grads["layer 0"]) - np.mean(np.array(self.grads["layer 0"]), axis = 0)
-        normwmean_grad["layer 1"] = np.array(self.grads["layer 1"]) - np.mean(np.array(self.grads["layer 1"]), axis = 0)
-        normwmean_grad["layer 2"] = np.array(self.grads["layer 2"]) - np.mean(np.array(self.grads["layer 2"]), axis = 0)
-        normwmean_grad["layer 3"] = np.array(self.grads["layer 3"]) - np.mean(np.array(self.grads["layer 3"]), axis = 0)
-        normwmean_grad["layer 4"] = np.array(self.grads["layer 4"]) - np.mean(np.array(self.grads["layer 4"]), axis = 0)
+        normwmean_grad["layer 0"] = np.mean(self.grads["layer 0"], axis=0)
+        normwmean_grad["layer 1"] = np.mean(self.grads["layer 1"], axis=0)
+        normwmean_grad["layer 2"] = np.mean(self.grads["layer 2"], axis=0)
+        normwmean_grad["layer 3"] = np.mean(self.grads["layer 3"], axis=0)
+        normwmean_grad["layer 4"] = np.mean(self.grads["layer 4"], axis=0)
         
-        normwmean_grad_mod["layer 0"] = np.linalg.norm(normwmean_grad["layer 0"], axis=0)
-        normwmean_grad_mod["layer 1"] = np.linalg.norm(normwmean_grad["layer 1"], axis=0)
-        normwmean_grad_mod["layer 2"] = np.linalg.norm(normwmean_grad["layer 2"], axis=0)
-        normwmean_grad_mod["layer 3"] = np.linalg.norm(normwmean_grad["layer 3"], axis=0)
-        normwmean_grad_mod["layer 4"] = np.linalg.norm(normwmean_grad["layer 4"], axis=0)
+        normwmean_grad_mod["layer 0"] = np.array(normwmean_grad["layer 0"]) - np.mean(np.array(normwmean_grad["layer 0"]), axis = 0)
+        normwmean_grad_mod["layer 1"] = np.array(normwmean_grad["layer 1"]) - np.mean(np.array(normwmean_grad["layer 1"]), axis = 0)
+        normwmean_grad_mod["layer 2"] = np.array(normwmean_grad["layer 2"]) - np.mean(np.array(normwmean_grad["layer 2"]), axis = 0)
+        normwmean_grad_mod["layer 3"] = np.array(normwmean_grad["layer 3"]) - np.mean(np.array(normwmean_grad["layer 3"]), axis = 0)
+        normwmean_grad_mod["layer 4"] = np.array(normwmean_grad["layer 4"]) - np.mean(np.array(normwmean_grad["layer 4"]), axis = 0)
+        
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
         
