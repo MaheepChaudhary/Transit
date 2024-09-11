@@ -493,8 +493,8 @@ if __name__ == "__main__":
     
     
     # model = LanguageModel("EleutherAI/pythia-70m", device_map=t.device("cuda" if t.cuda.is_available() else "mps"))
-    # model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
-    model = LanguageModel("openai-community/gpt2", device_map = "cpu")
+    model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
+    # model = LanguageModel("openai-community/gpt2", device_map = "cpu")
     train_data, val_data = inspect_data(data)
     print();print(model);print()
     
