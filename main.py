@@ -121,32 +121,7 @@ class single_sample_act_norm:
         plt.close()
             
 
-def plotting(data, name):
-    # Create the heatmap
-    plt.figure(figsize=(10, 5))  # Set figure size
-    plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
 
-    # Add color bar to indicate the scale
-    plt.colorbar()
-
-    # Set labels
-    plt.xlabel('Tokens')
-    plt.ylabel('Layers')
-
-    # Optionally, you can add titles
-    if name == "figures/layer_seq_norm.png":
-        plt.title('Token activations in different layers')
-    elif name == "figures/layer_seq_normwmean.png":
-        plt.title('Diff Mean Token activations in different layers')
-    elif name == "figures/grads_layer_seq_norm.png":
-        plt.title('Token gradients in different layers')
-    elif name == "figures/grad_layer_seq_normwmean.png":
-        plt.title('Diff Mean Token gradients in different layers')
-
-    # Show the heatmap
-    plt.savefig(name)
-    plt.close()
-    
 
 
 class single_sample_grad_norm:
@@ -241,8 +216,10 @@ def plotting(data, name):
 
 class normed:
 
-    def __init__(self, actemb):
+    def __init__(self, actemb, title, name):
         self.actemb = actemb
+        self.title = title
+        self.name = name
         
     def norm(self):
         
@@ -275,7 +252,7 @@ class normed:
             ])
         
         print(actlist.shape)
-        plotting(data=actlist, name = "figures/layer_seq_norm.png")
+        plotting(data=actlist, name = f"figures/activation_norm_{self.name}.png")
 
 
     def normwmean(self):
@@ -320,15 +297,36 @@ class normed:
             # mean_acts["last layer"]
             ])
 
-        plotting(data=actlistmean, name = "figures/layer_seq_normwmean.png")
+        self.plotting(data=actlistmean, name = f"figures/activation_normwmean_{self.name}.png")
 
+    def plotting(self, data, name):
+        # Create the heatmap
+        plt.figure(figsize=(10, 5))  # Set figure size
+        plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        plt.colorbar()
+
+        # Set labels
+        plt.xlabel('Tokens')
+        plt.ylabel('Layers')
+
+        # Optionally, you can add titles
+        plt.title(self.title)
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+    
 
 class gradients_norm:
     
-    def __init__(self, model, dataloader):
+    def __init__(self, model, dataloader, title, name):
         
         self.model = model
         self.dataloader = dataloader
+        self.title = title
+        self.name = name
         
         try:
             with open("data/grads_post_mlp_addn_resid.pkl", "rb") as f:
@@ -369,7 +367,7 @@ class gradients_norm:
             grad_embeds["layer 3"].append(np.mean(t.norm(output3, dim = -1)), dim = 0)
             grad_embeds["layer 4"].append(np.mean(t.norm(output4, dim = -1)), dim = 0)
             
-        with open("data/grads_post_mlp_addn_resid.pkl", "wb") as f:
+        with open(f"data/grad_norm_{self.name}", "wb") as f:
             pickle.dump(grad_embeds, f)
             
         return grad_embeds
@@ -403,7 +401,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlist, name = "figures/grads_layer_seq_norm_grad_post_mlp_addn_resid.png")
+        plotting(data=gradlist, name = f"figures/grad_normwmean_{self.name}.png")
     
     def normwmean(self):
         
@@ -449,7 +447,26 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean_grad_resid.png")
+        self.plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean_grad_post_mlp_addn_resid.png")
+
+    def plotting(self, data, name):
+        # Create the heatmap
+        plt.figure(figsize=(10, 5))  # Set figure size
+        plt.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        plt.colorbar()
+
+        # Set labels
+        plt.xlabel('Tokens')
+        plt.ylabel('Layers')
+
+        # Optionally, you can add titles
+        plt.title(self.title)
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
 
 
 def img_concat():
@@ -484,6 +501,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--batch_size", type=int, default="8")
+    parser.add_argument("--title", type=str, default="Title of the graph")
     
     args = parser.parse_args()
     
@@ -514,12 +532,13 @@ if __name__ == "__main__":
         with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
-
-    normed_class = normed(activation_embeds)
+    name = args.title
+    
+    normed_class = normed(activation_embeds, args.title, name)
     normed_class.normwmean()
     normed_class.norm()
     
-    normed_grad = gradients_norm(model, val_dataloader)
+    normed_grad = gradients_norm(model, val_dataloader, args.title, name)
     normed_grad.norm()
     normed_grad.normwmean()
     
