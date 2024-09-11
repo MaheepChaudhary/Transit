@@ -28,21 +28,20 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
         for batch in tqdm(dataloader):
             
             with model.trace(batch["input_ids"]) as tracer:
-                output0 = model.gpt_neox.layers[0].mlp.act.output.save()
-                output1 = model.gpt_neox.layers[1].mlp.act.output.save()
-                output2 = model.gpt_neox.layers[2].mlp.act.output.save()
-                output3 = model.gpt_neox.layers[3].mlp.act.output.save()
-                output4 = model.gpt_neox.layers[4].mlp.act.output.save()
-                output = model.embed_out.output.save()
+                output0 = model.gpt_neox.layers[0].output[0].save()
+                output1 = model.gpt_neox.layers[1].output[0].save()
+                output2 = model.gpt_neox.layers[2].output[0].save()
+                output3 = model.gpt_neox.layers[3].output[0].save()
+                output4 = model.gpt_neox.layers[4].output[0].save()
 
             # output0.shape -> (batch_size, 128, 2048)
-            activation_embeds["layer 0"].append(t.norm(t.norm(output0, dim = 0), dim = -1))
-            activation_embeds["layer 1"].append(t.norm(t.norm(output1, dim = 0), dim = -1))
-            activation_embeds["layer 2"].append(t.norm(t.norm(output2, dim = 0), dim = -1))
-            activation_embeds["layer 3"].append(t.norm(t.norm(output3, dim = 0), dim = -1))
-            activation_embeds["layer 4"].append(t.norm(t.norm(output4, dim = 0), dim = -1))
+            activation_embeds["layer 0"].append(np.mean(t.norm(output0, dim = -1)), dim = 0)
+            activation_embeds["layer 1"].append(np.mean(t.norm(output1, dim = -1)), dim = 0)
+            activation_embeds["layer 2"].append(np.mean(t.norm(output2, dim = -1)), dim = 0)
+            activation_embeds["layer 3"].append(np.mean(t.norm(output3, dim = -1)), dim = 0)
+            activation_embeds["layer 4"].append(np.mean(t.norm(output4, dim = -1)), dim = 0)
             
-    with open("data/activation_embeds_prenorm.pkl", "wb") as f:
+    with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
             
     return activation_embeds
@@ -498,6 +497,7 @@ if __name__ == "__main__":
     train_data, val_data = inspect_data(data)
     print();print(model);print()
     
+    # Tokenizing the text data
     try:
         with open(f"data/val_data_b{args.batch_size}.pkl", "rb") as f:
             val_dataloader = pickle.load(f)
@@ -508,27 +508,28 @@ if __name__ == "__main__":
         with open(f"data/val_data_b{args.batch_size}.pkl", "wb") as f:
             pickle.dump(val_dataloader, f)
     
+    # Computing the activations
     try:
-        with open("data/activation_embeds_prenorm.pkl", "rb") as f:
+        with open("data/activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
     except:
         activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
-        with open("data/activation_embeds_prenorm.pkl", "wb") as f:
+        with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
 
-    # normed_class = normed(activation_embeds)
-    # normed_class.normwmean()
-    # normed_class.norm()
+    normed_class = normed(activation_embeds)
+    normed_class.normwmean()
+    normed_class.norm()
     
-    # normed_grad = gradients_norm(model, val_dataloader)
-    # normed_grad.norm()
-    # normed_grad.normwmean()
+    normed_grad = gradients_norm(model, val_dataloader)
+    normed_grad.norm()
+    normed_grad.normwmean()
     
-    normed_single = single_sample_act_norm(model, val_data)
-    normed_single.norm()
+    # normed_single = single_sample_act_norm(model, val_data)
+    # normed_single.norm()
     
-    img_concat()
+    # img_concat()
     
     # grad_normed_single = single_sample_grad_norm(model, train_data)
     # grad_normed_single.grad_norm()
