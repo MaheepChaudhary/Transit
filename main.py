@@ -135,7 +135,7 @@ class single_sample_grad_norm:
     def __init__(self, model, data):
         self.model = model
         self.data = data
-    
+        self.model.train()
     def gradients(self):
         
         act_dict = {
@@ -145,9 +145,14 @@ class single_sample_grad_norm:
             "layer 3": [],
             "layer 4": []
         }
-        random_samples = random.sample(self.data["text"], 20)
+            
+        random_indices = random.sample(range(len(self.data)), 20)
+        # random_samples = [self.data[i] for i in random_indices]
+        random_samples = [{"text":"Hello world. How are you?"} for i in range(20)]
         for index, sample in enumerate(random_samples):
-            with self.model.trace(sample) as tracer:
+            pprint(sample['text'])
+            print()
+            with self.model.trace(sample['text']) as tracer:
                 output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
                 output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
                 output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
@@ -157,7 +162,11 @@ class single_sample_grad_norm:
             
             for i,j in enumerate([output0, output1, output2, output3, output4]):
                 act_dict[f"layer {i}"].append(np.array([t.norm(j, dim = -1).detach()]))
-
+        print(output0)
+        print(output1)
+        print(output2)
+        print(output3)
+        print(output4)
         return act_dict
     
     def grad_norm(self):
@@ -496,12 +505,12 @@ if __name__ == "__main__":
     # normed_grad.norm()
     # normed_grad.normwmean()
     
-    normed_single = single_sample_act_norm(model, val_data)
-    normed_single.norm()
-    
-    img_concat()
-    
-    # grad_normed_single = single_sample_grad_norm(model, train_data)
-    # grad_normed_single.grad_norm()
+    # normed_single = single_sample_act_norm(model, val_data)
+    # normed_single.norm()
     
     # img_concat()
+    
+    grad_normed_single = single_sample_grad_norm(model, train_data)
+    grad_normed_single.grad_norm()
+    
+    img_concat()
