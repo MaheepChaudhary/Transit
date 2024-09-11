@@ -35,11 +35,11 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
                 output4 = model.gpt_neox.layers[4].output[0].save()
 
             # output0.shape -> (batch_size, 128, 2048)
-            activation_embeds["layer 0"].append(np.mean(t.norm(output0, dim = -1)), dim = 0)
-            activation_embeds["layer 1"].append(np.mean(t.norm(output1, dim = -1)), dim = 0)
-            activation_embeds["layer 2"].append(np.mean(t.norm(output2, dim = -1)), dim = 0)
-            activation_embeds["layer 3"].append(np.mean(t.norm(output3, dim = -1)), dim = 0)
-            activation_embeds["layer 4"].append(np.mean(t.norm(output4, dim = -1)), dim = 0)
+            activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
+            activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
+            activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
+            activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
+            activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
             
     with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
@@ -252,7 +252,7 @@ class normed:
             ])
         
         print(actlist.shape)
-        plotting(data=actlist, name = f"figures/activation_norm_{self.name}.png")
+        self.plotting(data=actlist, name = f"figures/activation_norm_{self.name}.png")
 
 
     def normwmean(self):
@@ -287,6 +287,11 @@ class normed:
         normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
         normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
         
+        print(np.array(normwmean_actemb["layer 0"]))
+        print(np.array(normwmean_actemb_mod["layer 1"]))
+        print(np.array(normwmean_actemb_mod["layer 2"]))
+        print(np.array(normwmean_actemb_mod["layer 3"]))
+        print(np.array(normwmean_actemb_mod["layer 4"]))
         
         actlistmean = np.array([
             np.log(np.array(normwmean_actemb_mod["layer 0"])),
@@ -329,7 +334,7 @@ class gradients_norm:
         self.name = name
         
         try:
-            with open("data/grads_post_mlp_addn_resid.pkl", "rb") as f:
+            with open(f"data/grad_norm_{name}.pkl", "rb") as f:
                 grads = pickle.load(f)    
             self.grads = grads  
         except:
@@ -361,13 +366,16 @@ class gradients_norm:
                 self.model.output.logits.sum().backward()
             
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
-            grad_embeds["layer 0"].append(np.mean(t.norm(output0, dim = -1)), dim = 0)
-            grad_embeds["layer 1"].append(np.mean(t.norm(output1, dim = -1)), dim = 0)
-            grad_embeds["layer 2"].append(np.mean(t.norm(output2, dim = -1)), dim = 0)
-            grad_embeds["layer 3"].append(np.mean(t.norm(output3, dim = -1)), dim = 0)
-            grad_embeds["layer 4"].append(np.mean(t.norm(output4, dim = -1)), dim = 0)
+            output0_bmean = t.mean(output0, dim = 0, keepdim = True)
+            grad_embeds["layer 0"].append(t.norm(output0_bmean - t.mean(output0_bmean, dim = -1, keepdim = True)))
+            grad_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
+            grad_embeds["layer 1"].append(t.mean(output0, dim = 0, keepdim = True))
+            grad_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
+            grad_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
+            grad_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
+            grad_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
             
-        with open(f"data/grad_norm_{self.name}", "wb") as f:
+        with open(f"data/grad_norm_{self.name}.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
             
         return grad_embeds
@@ -401,7 +409,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        plotting(data=gradlist, name = f"figures/grad_normwmean_{self.name}.png")
+        self.plotting(data=gradlist, name = f"figures/grad_normwmean_{self.name}.png")
     
     def normwmean(self):
         
@@ -428,7 +436,7 @@ class gradients_norm:
         normwmean_grad["layer 2"] = np.mean(self.grads["layer 2"], axis=0)
         normwmean_grad["layer 3"] = np.mean(self.grads["layer 3"], axis=0)
         normwmean_grad["layer 4"] = np.mean(self.grads["layer 4"], axis=0)
-        
+    
         normwmean_grad_mod["layer 0"] = np.array(normwmean_grad["layer 0"]) - np.mean(np.array(normwmean_grad["layer 0"]), axis = 0)
         normwmean_grad_mod["layer 1"] = np.array(normwmean_grad["layer 1"]) - np.mean(np.array(normwmean_grad["layer 1"]), axis = 0)
         normwmean_grad_mod["layer 2"] = np.array(normwmean_grad["layer 2"]) - np.mean(np.array(normwmean_grad["layer 2"]), axis = 0)
