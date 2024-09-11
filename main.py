@@ -244,10 +244,6 @@ class normed:
     def __init__(self, actemb):
         self.actemb = actemb
         
-        
-
-
-        
     def norm(self):
         
         # Additional norm calculations for nested structures
@@ -261,11 +257,11 @@ class normed:
         }
         
         
-        norm_actemb["layer 0"] = np.linalg.norm(self.actemb["layer 0"], axis=0)
-        norm_actemb["layer 1"] = np.linalg.norm(self.actemb["layer 1"], axis=0)
-        norm_actemb["layer 2"] = np.linalg.norm(self.actemb["layer 2"], axis=0)
-        norm_actemb["layer 3"] = np.linalg.norm(self.actemb["layer 3"], axis=0)
-        norm_actemb["layer 4"] = np.linalg.norm(self.actemb["layer 4"], axis=0)
+        norm_actemb["layer 0"] = np.mean(self.actemb["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(self.actemb["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(self.actemb["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(self.actemb["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(self.actemb["layer 4"], axis=0)
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         print(np.array(self.actemb["layer 0"]).shape)
         
@@ -277,6 +273,7 @@ class normed:
             np.log(np.array(norm_actemb["layer 4"])),
             # mean_acts["last layer"]
             ])
+        
         print(actlist.shape)
         plotting(data=actlist, name = "figures/layer_seq_norm.png")
 
@@ -301,18 +298,17 @@ class normed:
             "layer 4": []
         }
         
+        normwmean_actemb["layer 0"] = np.mean(self.actemb["layer 0"], axis=0)
+        normwmean_actemb["layer 1"] = np.mean(self.actemb["layer 1"], axis=0)
+        normwmean_actemb["layer 2"] = np.mean(self.actemb["layer 2"], axis=0)
+        normwmean_actemb["layer 3"] = np.mean(self.actemb["layer 3"], axis=0)
+        normwmean_actemb["layer 4"] = np.mean(self.actemb["layer 4"], axis=0)
+        
         normwmean_actemb["layer 0"] = np.array(self.actemb["layer 0"]) - np.mean(np.array(self.actemb["layer 0"]), axis = 0)
         normwmean_actemb["layer 1"] = np.array(self.actemb["layer 1"]) - np.mean(np.array(self.actemb["layer 1"]), axis = 0)
         normwmean_actemb["layer 2"] = np.array(self.actemb["layer 2"]) - np.mean(np.array(self.actemb["layer 2"]), axis = 0)
         normwmean_actemb["layer 3"] = np.array(self.actemb["layer 3"]) - np.mean(np.array(self.actemb["layer 3"]), axis = 0)
         normwmean_actemb["layer 4"] = np.array(self.actemb["layer 4"]) - np.mean(np.array(self.actemb["layer 4"]), axis = 0)
-        
-        normwmean_actemb_mod["layer 0"] = np.linalg.norm(normwmean_actemb["layer 0"], axis=0)
-        normwmean_actemb_mod["layer 1"] = np.linalg.norm(normwmean_actemb["layer 1"], axis=0)
-        normwmean_actemb_mod["layer 2"] = np.linalg.norm(normwmean_actemb["layer 2"], axis=0)
-        normwmean_actemb_mod["layer 3"] = np.linalg.norm(normwmean_actemb["layer 3"], axis=0)
-        normwmean_actemb_mod["layer 4"] = np.linalg.norm(normwmean_actemb["layer 4"], axis=0)
-        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
         
         actlistmean = np.array([
