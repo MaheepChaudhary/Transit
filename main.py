@@ -431,7 +431,7 @@ class gradients_norm:
 def img_concat():
 
     # List of image file paths (assuming you have 22 image paths)
-    image_paths = ["mfigures_gradnorm/" + img for img in os.listdir("mfigures_gradnorm")]
+    image_paths = ["mfigures_norm/" + img for img in os.listdir("mfigures_norm")]
 
     # Determine the grid size, for example, 5 rows and 5 columns
     rows = 5
@@ -452,7 +452,7 @@ def img_concat():
 
     # Save the combined image or display it
     plt.tight_layout()
-    plt.savefig("mfigures_gradnorm/combined_image.png")
+    plt.savefig("mfigures_norm/combined_image.png")
 
 
 if __name__ == "__main__":
@@ -496,12 +496,12 @@ if __name__ == "__main__":
     # normed_grad.norm()
     # normed_grad.normwmean()
     
-    # normed_single = single_sample_act_norm(model, val_data)
-    # normed_single.norm()
-    
-    # img_concat()
-    
-    grad_normed_single = single_sample_grad_norm(model, val_data)
-    grad_normed_single.grad_norm()
+    normed_single = single_sample_act_norm(model, val_data)
+    normed_single.norm()
     
     img_concat()
+    
+    # grad_normed_single = single_sample_grad_norm(model, train_data)
+    # grad_normed_single.grad_norm()
+    
+    # img_concat()
