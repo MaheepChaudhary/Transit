@@ -48,7 +48,7 @@ if __name__ == "__main__":
     
     if args.model == "pythia":
         
-        normed_class = act_pythia(
+        normed_class = act_pythia_block(
             title=args.title, 
             name = name, 
             model = model, 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         
         normed_class.norm()
         
-        grad_class = grad_pythia(
+        grad_class = grad_pythia_block(
             title=args.title, 
             name = name, 
             model = model, 
