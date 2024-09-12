@@ -78,7 +78,27 @@ if __name__ == "__main__":
             
             normed_class_mlp.norm()
         
-        grad_class_mlp = grad_pythia_mlp(
+            grad_class_mlp = grad_pythia_mlp(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+        
+            grad_class_mlp.grad_norm()
+        
+        elif args.title == "attn_output":
+            
+            normed_class_mlp = act_pythia_attention(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class_mlp.norm()
+        
+        grad_class_mlp = grad_pythia_attention(
             title=args.title, 
             name = name, 
             model = model, 

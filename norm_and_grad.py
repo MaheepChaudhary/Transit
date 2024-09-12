@@ -158,7 +158,6 @@ class act_pythia_resid_post_mlp_addn:
         plt.savefig(name)
         plt.close()
 
-    
 
 class grad_pythia_resid_post_mlp_addn:
     
@@ -588,13 +587,14 @@ class act_pythia_attention:
             for batch in tqdm(self.dataloader):
                 
                 with self.model.trace(batch["input_ids"]) as tracer:
-                    output0 = self.model.gpt_neox.layers[0].attention[0].output.save()
-                    output1 = self.model.gpt_neox.layers[1].attention[0].output.save()
-                    output2 = self.model.gpt_neox.layers[2].attention[0].output.save()
-                    output3 = self.model.gpt_neox.layers[3].attention[0].output.save()
-                    output4 = self.model.gpt_neox.layers[4].attention[0].output.save()
+                    output0 = self.model.gpt_neox.layers[0].attention.output[0].save()
+                    output1 = self.model.gpt_neox.layers[1].attention.output[0].save()
+                    output2 = self.model.gpt_neox.layers[2].attention.output[0].save()
+                    output3 = self.model.gpt_neox.layers[3].attention.output[0].save()
+                    output4 = self.model.gpt_neox.layers[4].attention.output[0].save()
 
                 # output0.shape -> (batch_size, 128, 2048)
+                print(output0.shape)
                 activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
                 activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
                 activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
@@ -706,11 +706,11 @@ class grad_pythia_attention:
             
             with self.model.trace(batch["input_ids"]) as tracer:
             
-                output0 = self.model.gpt_neox.layers[0].attention[0].output.grad.save()
-                output1 = self.model.gpt_neox.layers[1].attention[0].output.grad.save()
-                output2 = self.model.gpt_neox.layers[2].attention[0].output.grad.save()
-                output3 = self.model.gpt_neox.layers[3].attention[0].output.grad.save()
-                output4 = self.model.gpt_neox.layers[4].attention[0].output.grad.save()
+                output0 = self.model.gpt_neox.layers[0].attention.output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].attention.output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].attention.output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].attention.output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].attention.output[0].grad.save()
                 
                 self.model.output.logits.sum().backward()
             
