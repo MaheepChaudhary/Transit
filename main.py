@@ -53,7 +53,7 @@ if __name__ == "__main__":
             name = name, 
             model = model, 
             dataloader = val_dataloader, 
-            batch_size=args.batch_size)
+            )
         
         normed_class.norm()
         
@@ -62,7 +62,7 @@ if __name__ == "__main__":
             name = name, 
             model = model, 
             dataloader = val_dataloader, 
-            batch_size=args.batch_size)
+            )
         
         grad_class.grad_norm()
     
