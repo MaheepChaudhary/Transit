@@ -48,41 +48,44 @@ if __name__ == "__main__":
     
     if args.model == "pythia":
         
-        normed_class = act_pythia_resid_post_mlp_addn(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
+        if args.title == "post_mlp_addn_resid_layer":
+            normed_class = act_pythia_resid_post_mlp_addn(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class.norm()
+            
+            grad_class = grad_pythia_resid_post_mlp_addn(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            grad_class.grad_norm()
         
-        normed_class.norm()
+        elif args.title == "mlp_output":
+            
+            normed_class_mlp = act_pythia_mlp(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class_mlp.norm()
         
-        grad_class = grad_pythia_resid_post_mlp_addn(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
+        # grad_class_mlp = grad_pythia_mlp(
+        #     title=args.title, 
+        #     name = name, 
+        #     model = model, 
+        #     dataloader = val_dataloader, 
+        #     )
         
-        grad_class.grad_norm()
-        
-        normed_class_mlp = act_pythia_mlp(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
-        
-        normed_class_mlp.norm()
-        
-        grad_class_mlp = grad_pythia_mlp(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
-        
-        grad_class_mlp.grad_norm()
+        # grad_class_mlp.grad_norm()
     
     elif args.model == "gpt2":
         pass
