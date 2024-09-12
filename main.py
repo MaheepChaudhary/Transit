@@ -108,24 +108,65 @@ if __name__ == "__main__":
         grad_class_mlp.grad_norm()
     
     elif args.model == "gpt2":
-        pass
-        # normed_class = normed_gpt2(
-        #     title=args.title, 
-        #     name = name, 
-        #     model = model, 
-        #     dataloader = val_dataloader, 
-        #     batch_size=args.batch_size)
         
-        # normed_class.norm()
+        if args.title == "post_mlp_addn_resid_layer":
+            normed_class = act_gpt2_resid_post_mlp_addn(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class.norm()
+            
+            grad_class = grad_gpt2_resid_post_mlp_addn(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            grad_class.grad_norm()
         
-        # grad_class = grad_gpt2(
-        #     title=args.title, 
-        #     name = name, 
-        #     model = model, 
-        #     dataloader = val_dataloader, 
-        #     batch_size=args.batch_size)
+        elif args.title == "mlp_output":
+            
+            normed_class_mlp = act_gpt2_mlp(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class_mlp.norm()
         
-        # grad_class.grad_norm()
+            grad_class_mlp = grad_gpt2_mlp(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+        
+            grad_class_mlp.grad_norm()
+        
+        elif args.title == "attn_output":
+            
+            normed_class_mlp = act_gpt2_attention(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            normed_class_mlp.norm()
+        
+        grad_class_mlp = grad_gpt2_attention(
+            title=args.title, 
+            name = name, 
+            model = model, 
+            dataloader = val_dataloader, 
+            )
+        
+        grad_class_mlp.grad_norm()
     
 
     
