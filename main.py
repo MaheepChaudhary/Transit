@@ -35,13 +35,13 @@ if __name__ == "__main__":
     print();print(model);print()
     # Tokenizing the text data
     try:
-        with open(f"data/val_data_b{args.batch_size}.pkl", "rb") as f:
+        with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "rb") as f:
             val_dataloader = pickle.load(f)
 
     except:
         val_dataloader = process_data(model, train_data, val_data, args.batch_size)
         
-        with open(f"data/val_data_b{args.batch_size}.pkl", "wb") as f:
+        with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "wb") as f:
             pickle.dump(val_dataloader, f)
     
     
