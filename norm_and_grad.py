@@ -985,18 +985,18 @@ class grad_gpt2_resid_post_mlp_addn:
             
             with self.model.trace(batch["input_ids"]) as tracer:
             
-                output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
-                output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
-                output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
-                output3 = self.model.gpt_neox.layers[3].output[0].grad.save()
-                output4 = self.model.gpt_neox.layers[4].output[0].grad.save()
-                output5 = self.model.gpt_neox.layers[5].output[0].grad.save()
-                output6 = self.model.gpt_neox.layers[6].output[0].grad.save()
-                output7 = self.model.gpt_neox.layers[7].output[0].grad.save()
-                output8 = self.model.gpt_neox.layers[8].output[0].grad.save()
-                output9 = self.model.gpt_neox.layers[9].output[0].grad.save()
-                output10 = self.model.gpt_neox.layers[10].output[0].grad.save()
-                output11 = self.model.gpt_neox.layers[11].output[0].grad.save()
+                output0 = self.model.transformer.h[0].output[0].grad.save()
+                output1 = self.model.transformer.h[1].output[0].grad.save()
+                output2 = self.model.transformer.h[2].output[0].grad.save()
+                output3 = self.model.transformer.h[3].output[0].grad.save()
+                output4 = self.model.transformer.h[4].output[0].grad.save()
+                output5 = self.model.transformer.h[5].output[0].grad.save()
+                output6 = self.model.transformer.h[6].output[0].grad.save()
+                output7 = self.model.transformer.h[7].output[0].grad.save()
+                output8 = self.model.transformer.h[8].output[0].grad.save()
+                output9 = self.model.transformer.h[9].output[0].grad.save()
+                output10 = self.model.transformer.h[10].output[0].grad.save()
+                output11 = self.model.transformer.h[11].output[0].grad.save()
                 
                 self.model.output.logits.sum().backward()
             
@@ -1299,7 +1299,18 @@ class grad_gpt2_mlp:
             
             with self.model.trace(batch["input_ids"]) as tracer:
             
-                output0 = self.model.gpt_neox.layers[0].mlp.output.grad.save()
+                output0 = self.model.transformer.h[0].mlp.output.grad.save()
+                output1 = self.model.transformer.h[1].mlp.output.grad.save()
+                output2 = self.model.transformer.h[2].mlp.output.grad.save()
+                output3 = self.model.transformer.h[3].mlp.output.grad.save()
+                output4 = self.model.transformer.h[4].mlp.output.grad.save()
+                output5 = self.model.transformer.h[5].mlp.output.grad.save()
+                output6 = self.model.transformer.h[6].mlp.output.grad.save()
+                output7 = self.model.transformer.h[7].mlp.output.grad.save()
+                output8 = self.model.transformer.h[8].mlp.output.grad.save()
+                output9 = self.model.transformer.h[9].mlp.output.grad.save()
+                output10 = self.model.transformer.h[10].mlp.output.grad.save()
+                output11 = self.model.transformer.h[11].mlp.output.grad.save()
                 
                 
                 self.model.output.logits.sum().backward()
