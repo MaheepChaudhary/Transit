@@ -938,6 +938,164 @@ class act_gpt2_resid_post_mlp_addn:
         plt.close()
 
 
+class grad_gpt2_resid_post_mlp_addn:
+    
+    def __init__(
+        self, 
+        model, 
+        dataloader, 
+        title, 
+        name
+        ):
+        
+        self.model = model
+        self.dataloader = dataloader
+        self.title = title
+        self.name = name
+        
+        try:
+            with open(f"data/gpt2_grad_norm_{name}.pkl", "rb") as f:
+                grads = pickle.load(f)    
+            self.grads = grads  
+        except:
+            print("Generating pickle file of gradient embeds")
+            self.grads = self.get_grads()
+            
+    
+    
+    def get_grads(self):
+        
+        grad_embeds = {
+        "layer 0": [],
+        "layer 1": [],
+        "layer 2": [],
+        "layer 3": [],
+        "layer 4": [],
+        "layer 5": [],
+        "layer 6": [],
+        "layer 7": [],
+        "layer 8": [],
+        "layer 9": [],
+        "layer 10": [],
+        "layer 11": []
+        }
+        
+        
+        for batch in tqdm(self.dataloader):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+            
+                output0 = self.model.gpt_neox.layers[0].output[0].grad.save()
+                output1 = self.model.gpt_neox.layers[1].output[0].grad.save()
+                output2 = self.model.gpt_neox.layers[2].output[0].grad.save()
+                output3 = self.model.gpt_neox.layers[3].output[0].grad.save()
+                output4 = self.model.gpt_neox.layers[4].output[0].grad.save()
+                output5 = self.model.gpt_neox.layers[5].output[0].grad.save()
+                output6 = self.model.gpt_neox.layers[6].output[0].grad.save()
+                output7 = self.model.gpt_neox.layers[7].output[0].grad.save()
+                output8 = self.model.gpt_neox.layers[8].output[0].grad.save()
+                output9 = self.model.gpt_neox.layers[9].output[0].grad.save()
+                output10 = self.model.gpt_neox.layers[10].output[0].grad.save()
+                output11 = self.model.gpt_neox.layers[11].output[0].grad.save()
+                
+                self.model.output.logits.sum().backward()
+            
+            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            grad_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
+            grad_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
+            grad_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
+            grad_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
+            grad_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
+            grad_embeds["layer 5"].append(t.mean(t.norm(output5, dim = -1), dim = 0))
+            grad_embeds["layer 6"].append(t.mean(t.norm(output6, dim = -1), dim = 0))
+            grad_embeds["layer 7"].append(t.mean(t.norm(output7, dim = -1), dim = 0))
+            grad_embeds["layer 8"].append(t.mean(t.norm(output8, dim = -1), dim = 0))
+            grad_embeds["layer 9"].append(t.mean(t.norm(output9, dim = -1), dim = 0))
+            grad_embeds["layer 10"].append(t.mean(t.norm(output10, dim = -1), dim = 0))
+            grad_embeds["layer 11"].append(t.mean(t.norm(output11, dim = -1), dim = 0))
+            
+        with open(f"data/gpt2_grad_norm_{self.name}.pkl", "wb") as f:
+            pickle.dump(grad_embeds, f)
+            
+        return grad_embeds
+
+    def grad_norm(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        grad_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        
+        grad_actemb["layer 0"] = np.mean(self.grads["layer 0"], axis=0)
+        grad_actemb["layer 1"] = np.mean(self.grads["layer 1"], axis=0)
+        grad_actemb["layer 2"] = np.mean(self.grads["layer 2"], axis=0)
+        grad_actemb["layer 3"] = np.mean(self.grads["layer 3"], axis=0)
+        grad_actemb["layer 4"] = np.mean(self.grads["layer 4"], axis=0)
+        grad_actemb["layer 5"] = np.mean(self.grads["layer 5"], axis=0)
+        grad_actemb["layer 6"] = np.mean(self.grads["layer 6"], axis=0)
+        grad_actemb["layer 7"] = np.mean(self.grads["layer 7"], axis=0)
+        grad_actemb["layer 8"] = np.mean(self.grads["layer 8"], axis=0)
+        grad_actemb["layer 9"] = np.mean(self.grads["layer 9"], axis=0)
+        grad_actemb["layer 10"] = np.mean(self.grads["layer 10"], axis=0)
+        grad_actemb["layer 11"] = np.mean(self.grads["layer 11"], axis=0)
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        gradlist = np.array([
+            np.log(np.array(grad_actemb["layer 0"])),
+            np.log(np.array(grad_actemb["layer 1"])),
+            np.log(np.array(grad_actemb["layer 2"])),
+            np.log(np.array(grad_actemb["layer 3"])),
+            np.log(np.array(grad_actemb["layer 4"])),
+            np.log(np.array(grad_actemb["layer 5"])),
+            np.log(np.array(grad_actemb["layer 6"])),
+            np.log(np.array(grad_actemb["layer 7"])),
+            np.log(np.array(grad_actemb["layer 8"])),
+            np.log(np.array(grad_actemb["layer 9"])),
+            np.log(np.array(grad_actemb["layer 10"])),
+            np.log(np.array(grad_actemb["layer 11"])),
+            # mean_acts["last layer"]
+            ])
+        print(gradlist)
+        self.plotting(data=gradlist, name = f"figures/gpt2_grad_embed_{self.name}.png")
+    
+
+    def plotting(self, data, name):
+        # Create the heatmap
+        fig, ax = plt.subplots(figsize=(10, 11))  # Set figure size
+        cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        cbar = fig.colorbar(cax, ax=ax)
+
+        # Set labels
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('Layers')
+
+        # Add labels to the right side (create twin axes sharing the same y-axis)
+        ax_right = ax.twinx()  
+        ax_right.set_ylabel('Log Scale', rotation=-90, labelpad=15)
+
+        # Optionally, you can add titles
+        plt.title(f"[GPT-2]:Gradient of {self.title}")
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+
+
 
 
 def img_concat():
