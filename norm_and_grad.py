@@ -1,52 +1,62 @@
 from imports import *
 
 
-def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 layers and one last layer. 
-    model.eval()
-    
-    activation_embeds = {
-        "layer 0": [],
-        "layer 1": [],
-        "layer 2": [],
-        "layer 3": [],
-        "layer 4": []
-    }
-    
-    with t.no_grad():
-        for batch in tqdm(dataloader):
-            
-            with model.trace(batch["input_ids"]) as tracer:
-                output0 = model.gpt_neox.layers[0].output[0].save()
-                output1 = model.gpt_neox.layers[1].output[0].save()
-                output2 = model.gpt_neox.layers[2].output[0].save()
-                output3 = model.gpt_neox.layers[3].output[0].save()
-                output4 = model.gpt_neox.layers[4].output[0].save()
+class normed_pythia:
 
-            # output0.shape -> (batch_size, 128, 2048)
-            output0_bmean = t.mean(output0, dim = 0, keepdim = True)
-            output1_bmean = t.mean(output1, dim = 0, keepdim = True)
-            output2_bmean = t.mean(output2, dim = 0, keepdim = True)
-            output3_bmean = t.mean(output3, dim = 0, keepdim = True)
-            output4_bmean = t.mean(output4, dim = 0, keepdim = True)
-            
-            activation_embeds["layer 0"].append(t.norm(output0_bmean - t.mean(output0_bmean, dim = -1, keepdim = True), dim = -1))
-            activation_embeds["layer 1"].append(t.norm(output1_bmean - t.mean(output1_bmean, dim = -1, keepdim = True), dim = -1))
-            activation_embeds["layer 2"].append(t.norm(output2_bmean - t.mean(output2_bmean, dim = -1, keepdim = True), dim = -1))
-            activation_embeds["layer 3"].append(t.norm(output3_bmean - t.mean(output3_bmean, dim = -1, keepdim = True), dim = -1))
-            activation_embeds["layer 4"].append(t.norm(output4_bmean - t.mean(output4_bmean, dim = -1, keepdim = True), dim = -1))
-            
-    with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
-        pickle.dump(activation_embeds, f)
-            
-    return activation_embeds
-
-
-
-class normed:
-
-    def __init__(self, title, name):
+    def __init__(
+        self, 
+        title, 
+        name,
+        model,
+        dataloader,
+        batch_size):
+        
         self.title = title
         self.name = name
+        self.model = model
+        self.dataloader = dataloader
+        self.batch_size = batch_size
+        
+        
+        try:
+            with open(f"data/pythia_activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
+                activation_embeds = pickle.load(f)
+        except:
+            activation_embeds = self.activation_embeds_fn()
+        
+    def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
+        self.model.eval()
+        
+        activation_embeds = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        with t.no_grad():
+            for batch in tqdm(self.dataloader):
+                
+                with self.model.trace(batch["input_ids"]) as tracer:
+                    output0 = self.model.gpt_neox.layers[0].output[0].save()
+                    output1 = self.model.gpt_neox.layers[1].output[0].save()
+                    output2 = self.model.gpt_neox.layers[2].output[0].save()
+                    output3 = self.model.gpt_neox.layers[3].output[0].save()
+                    output4 = self.model.gpt_neox.layers[4].output[0].save()
+
+                # output0.shape -> (batch_size, 128, 2048)
+                activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
+                activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
+                activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
+                activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
+                activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
+                
+        with open("data/pythia_activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
+            pickle.dump(activation_embeds, f)
+                
+        return activation_embeds
+
         
     def norm(self, data):
         
@@ -94,23 +104,26 @@ class normed:
             "layer 4": []
         }
         
+        normwmean_actemb_mod = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
         normwmean_actemb["layer 0"] = np.mean(data["layer 0"], axis=0).squeeze(0)
         normwmean_actemb["layer 1"] = np.mean(data["layer 1"], axis=0).squeeze(0)
         normwmean_actemb["layer 2"] = np.mean(data["layer 2"], axis=0).squeeze(0)
         normwmean_actemb["layer 3"] = np.mean(data["layer 3"], axis=0).squeeze(0)
         normwmean_actemb["layer 4"] = np.mean(data["layer 4"], axis=0).squeeze(0)
         
-        # normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
-        # normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
-        # normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
-        # normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
-        # normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
+        normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
+        normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
+        normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
+        normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
+        normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
         
-        # print(np.array(normwmean_actemb["layer 0"]))
-        # print(np.array(normwmean_actemb_mod["layer 1"]))
-        # print(np.array(normwmean_actemb_mod["layer 2"]))
-        # print(np.array(normwmean_actemb_mod["layer 3"]))
-        # print(np.array(normwmean_actemb_mod["layer 4"]))
         
         actlistmean = np.array([
             np.log(np.array(normwmean_actemb["layer 0"])),

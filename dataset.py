@@ -7,10 +7,6 @@ def inspect_data(data):
     train_dataset = data['train']
     validation_dataset = data['validation']
 
-    # Inspect the first few rows
-    pprint(train_dataset[:8])
-    pprint(validation_dataset[:8])
-
     # Get the total number of rows
     pprint(f"Training set size: {len(train_dataset)}")
     pprint(f"Validation set size: {len(validation_dataset)}")
