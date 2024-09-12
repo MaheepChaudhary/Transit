@@ -1,7 +1,7 @@
 from imports import *
 
 
-class act_pythia:
+class act_pythia_block:
 
     def __init__(
         self, 
@@ -19,7 +19,7 @@ class act_pythia:
         
         
         try:
-            with open(f"data/pythia_activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
+            with open(f"data/pythia_activation_embeds_{self.name}.pkl", "rb") as f:
                 self.activation_embeds = pickle.load(f)
         except:
             self.activation_embeds = self.activation_embeds_fn()
@@ -52,7 +52,7 @@ class act_pythia:
                 activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
                 activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
                 
-        with open("data/pythia_activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
+        with open(f"data/pythia_activation_embeds_{self.name}.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
                 
         return activation_embeds
@@ -157,9 +157,15 @@ class act_pythia:
         plt.close()
     
 
-class grad_pythia:
+class grad_pythia_block:
     
-    def __init__(self, model, dataloader, title, name):
+    def __init__(
+        self, 
+        model, 
+        dataloader, 
+        title, 
+        name
+        ):
         
         self.model = model
         self.dataloader = dataloader
@@ -167,7 +173,7 @@ class grad_pythia:
         self.name = name
         
         try:
-            with open(f"mdata/grad_norm_{name}.pkl", "rb") as f:
+            with open(f"data/grad_norm_{name}.pkl", "rb") as f:
                 grads = pickle.load(f)    
             self.grads = grads  
         except:
