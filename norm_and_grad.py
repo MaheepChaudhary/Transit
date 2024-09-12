@@ -782,6 +782,164 @@ class grad_pythia_attention:
         plt.close()
 
 
+class act_gpt2_resid_post_mlp_addn:
+
+    def __init__(
+        self, 
+        title, 
+        name,
+        model,
+        dataloader):
+        
+        self.title = title
+        self.name = name
+        self.model = model
+        self.dataloader = dataloader
+        
+        
+        try:
+            with open(f"data/gpt2_activation_embeds_{self.name}.pkl", "rb") as f:
+                self.activation_embeds = pickle.load(f)
+        except:
+            print("Generating pickle file of activation embeds")
+            self.activation_embeds = self.activation_embeds_fn()
+        
+    def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
+        self.model.eval()
+        
+        activation_embeds = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        with t.no_grad():
+            for batch in tqdm(self.dataloader):
+                
+                with self.model.trace(batch["input_ids"]) as tracer:
+                    output0 = self.model.transformer.h[0].output[0].save()
+                    output1 = self.model.transformer.h[1].output[0].save()
+                    output2 = self.model.transformer.h[2].output[0].save()
+                    output3 = self.model.transformer.h[3].output[0].save()
+                    output4 = self.model.transformer.h[4].output[0].save()
+                    output5 = self.model.transformer.h[5].output[0].save()
+                    output6 = self.model.transformer.h[6].output[0].save()
+                    output7 = self.model.transformer.h[7].output[0].save()
+                    output8 = self.model.transformer.h[8].output[0].save()
+                    output9 = self.model.transformer.h[9].output[0].save()
+                    output10 = self.model.transformer.h[10].output[0].save()
+                    output11 = self.model.transformer.h[11].output[0].save()
+
+                # output0.shape -> (batch_size, 128, 2048)
+                activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
+                activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
+                activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
+                activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
+                activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
+                activation_embeds["layer 5"].append(t.mean(t.norm(output5, dim = -1), dim = 0))
+                activation_embeds["layer 6"].append(t.mean(t.norm(output6, dim = -1), dim = 0))
+                activation_embeds["layer 7"].append(t.mean(t.norm(output7, dim = -1), dim = 0))
+                activation_embeds["layer 8"].append(t.mean(t.norm(output8, dim = -1), dim = 0))
+                activation_embeds["layer 9"].append(t.mean(t.norm(output9, dim = -1), dim = 0))
+                activation_embeds["layer 10"].append(t.mean(t.norm(output10, dim = -1), dim = 0))
+                activation_embeds["layer 11"].append(t.mean(t.norm(output11, dim = -1), dim = 0))
+                
+        with open(f"data/gpt2_activation_embeds_{self.name}.pkl", "wb") as f:
+            pickle.dump(activation_embeds, f)
+                
+        return activation_embeds
+
+        
+    def norm(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        norm_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        
+        norm_actemb["layer 0"] = np.mean(self.activation_embeds["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(self.activation_embeds["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(self.activation_embeds["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(self.activation_embeds["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(self.activation_embeds["layer 4"], axis=0)
+        norm_actemb["layer 5"] = np.mean(self.activation_embeds["layer 5"], axis=0)
+        norm_actemb["layer 6"] = np.mean(self.activation_embeds["layer 6"], axis=0)
+        norm_actemb["layer 7"] = np.mean(self.activation_embeds["layer 7"], axis=0)
+        norm_actemb["layer 8"] = np.mean(self.activation_embeds["layer 8"], axis=0)
+        norm_actemb["layer 9"] = np.mean(self.activation_embeds["layer 9"], axis=0)
+        norm_actemb["layer 10"] = np.mean(self.activation_embeds["layer 10"], axis=0)
+        norm_actemb["layer 11"] = np.mean(self.activation_embeds["layer 11"], axis=0)
+        
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        actlist = np.array([
+            np.log(np.array(norm_actemb["layer 0"])),
+            np.log(np.array(norm_actemb["layer 1"])),
+            np.log(np.array(norm_actemb["layer 2"])),
+            np.log(np.array(norm_actemb["layer 3"])),
+            np.log(np.array(norm_actemb["layer 4"])),
+            np.log(np.array(norm_actemb["layer 5"])),
+            np.log(np.array(norm_actemb["layer 6"])),
+            np.log(np.array(norm_actemb["layer 7"])),
+            np.log(np.array(norm_actemb["layer 8"])),
+            np.log(np.array(norm_actemb["layer 9"])),
+            np.log(np.array(norm_actemb["layer 10"])),
+            np.log(np.array(norm_actemb["layer 11"])),
+            # mean_acts["last layer"]
+            ])
+        
+        print(actlist)
+        self.plotting(data=actlist, name = f"figures/gpt2_activation_embeds_{self.name}.png")
+
+
+    def plotting(self, data, name):
+        # Create the heatmap
+        fig, ax = plt.subplots(figsize=(10, 11))  # Set figure size
+        cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        cbar = fig.colorbar(cax, ax=ax)
+
+        # Set labels
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('Layers')
+
+        # Add labels to the right side (create twin axes sharing the same y-axis)
+        ax_right = ax.twinx()  
+        ax_right.set_ylabel('Log Scale', rotation=-90, labelpad=15)
+
+        # Optionally, you can add titles
+        plt.title(f"[GPT-2]:Activation of {self.title}")
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+
+
+
+
 def img_concat():
 
     # List of image file paths (assuming you have 22 image paths)
