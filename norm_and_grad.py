@@ -1,7 +1,7 @@
 from imports import *
 
 
-class act_pythia_block:
+class act_pythia_resid_post_mlp_addn:
 
     def __init__(
         self, 
@@ -160,7 +160,7 @@ class act_pythia_block:
 
     
 
-class grad_pythia_block:
+class grad_pythia_resid_post_mlp_addn:
     
     def __init__(
         self, 

@@ -48,7 +48,7 @@ if __name__ == "__main__":
     
     if args.model == "pythia":
         
-        normed_class = act_pythia_block(
+        normed_class = act_pythia_resid_post_mlp_addn(
             title=args.title, 
             name = name, 
             model = model, 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
         
         normed_class.norm()
         
-        grad_class = grad_pythia_block(
+        grad_class = grad_pythia_resid_post_mlp_addn(
             title=args.title, 
             name = name, 
             model = model, 
@@ -65,6 +65,24 @@ if __name__ == "__main__":
             )
         
         grad_class.grad_norm()
+        
+        normed_class_mlp = act_pythia_mlp(
+            title=args.title, 
+            name = name, 
+            model = model, 
+            dataloader = val_dataloader, 
+            )
+        
+        normed_class_mlp.norm()
+        
+        grad_class_mlp = grad_pythia_mlp(
+            title=args.title, 
+            name = name, 
+            model = model, 
+            dataloader = val_dataloader, 
+            )
+        
+        grad_class_mlp.grad_norm()
     
     elif args.model == "gpt2":
         pass
