@@ -3,3 +3,4 @@ __pycache__/imports.cpython-311.pyc
 __pycache__/models.cpython-311.pyc
 __pycache__/dataset.cpython-311.pyc
 data/*
+mdata/activation_embeds_post_mlp_addn_resid.pkl

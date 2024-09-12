@@ -35,13 +35,19 @@ def activation_embeds_fn(model, dataloader, batch_size): # So it contains 5 laye
                 output4 = model.gpt_neox.layers[4].output[0].save()
 
             # output0.shape -> (batch_size, 128, 2048)
-            activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
-            activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
-            activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
-            activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
-            activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
+            output0_bmean = t.mean(output0, dim = 0, keepdim = True)
+            output1_bmean = t.mean(output1, dim = 0, keepdim = True)
+            output2_bmean = t.mean(output2, dim = 0, keepdim = True)
+            output3_bmean = t.mean(output3, dim = 0, keepdim = True)
+            output4_bmean = t.mean(output4, dim = 0, keepdim = True)
             
-    with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
+            activation_embeds["layer 0"].append(t.norm(output0_bmean - t.mean(output0_bmean, dim = -1, keepdim = True), dim = -1))
+            activation_embeds["layer 1"].append(t.norm(output1_bmean - t.mean(output1_bmean, dim = -1, keepdim = True), dim = -1))
+            activation_embeds["layer 2"].append(t.norm(output2_bmean - t.mean(output2_bmean, dim = -1, keepdim = True), dim = -1))
+            activation_embeds["layer 3"].append(t.norm(output3_bmean - t.mean(output3_bmean, dim = -1, keepdim = True), dim = -1))
+            activation_embeds["layer 4"].append(t.norm(output4_bmean - t.mean(output4_bmean, dim = -1, keepdim = True), dim = -1))
+            
+    with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
         pickle.dump(activation_embeds, f)
             
     return activation_embeds
@@ -120,9 +126,6 @@ class single_sample_act_norm:
         plt.savefig(name)
         plt.close()
             
-
-
-
 
 class single_sample_grad_norm:
     
@@ -216,12 +219,11 @@ def plotting(data, name):
 
 class normed:
 
-    def __init__(self, actemb, title, name):
-        self.actemb = actemb
+    def __init__(self, title, name):
         self.title = title
         self.name = name
         
-    def norm(self):
+    def norm(self, data):
         
         # Additional norm calculations for nested structures
         # assert np.array(self.actemb["layer 0"]).shape[1] == 128
@@ -234,11 +236,11 @@ class normed:
         }
         
         
-        norm_actemb["layer 0"] = np.mean(self.actemb["layer 0"], axis=0)
-        norm_actemb["layer 1"] = np.mean(self.actemb["layer 1"], axis=0)
-        norm_actemb["layer 2"] = np.mean(self.actemb["layer 2"], axis=0)
-        norm_actemb["layer 3"] = np.mean(self.actemb["layer 3"], axis=0)
-        norm_actemb["layer 4"] = np.mean(self.actemb["layer 4"], axis=0)
+        norm_actemb["layer 0"] = np.mean(data["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(data["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(data["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(data["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(data["layer 4"], axis=0)
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         print(np.array(self.actemb["layer 0"]).shape)
         
@@ -252,10 +254,10 @@ class normed:
             ])
         
         print(actlist.shape)
-        self.plotting(data=actlist, name = f"figures/activation_norm_{self.name}.png")
+        self.plotting(data=actlist, name = f"mfigures/activation_norm_{self.name}.png")
 
 
-    def normwmean(self):
+    def normwmean(self, data):
         
         # Additional norm calculations for nested structures
         # assert np.array(self.actemb["layer 0"]).shape[1] == 128
@@ -267,42 +269,34 @@ class normed:
             "layer 4": []
         }
         
-        normwmean_actemb_mod = {
-            "layer 0": [],
-            "layer 1": [],
-            "layer 2": [],
-            "layer 3": [],
-            "layer 4": []
-        }
+        normwmean_actemb["layer 0"] = np.mean(data["layer 0"], axis=0)
+        normwmean_actemb["layer 1"] = np.mean(data["layer 1"], axis=0)
+        normwmean_actemb["layer 2"] = np.mean(data["layer 2"], axis=0)
+        normwmean_actemb["layer 3"] = np.mean(data["layer 3"], axis=0)
+        normwmean_actemb["layer 4"] = np.mean(data["layer 4"], axis=0)
         
-        normwmean_actemb["layer 0"] = np.mean(self.actemb["layer 0"], axis=0)
-        normwmean_actemb["layer 1"] = np.mean(self.actemb["layer 1"], axis=0)
-        normwmean_actemb["layer 2"] = np.mean(self.actemb["layer 2"], axis=0)
-        normwmean_actemb["layer 3"] = np.mean(self.actemb["layer 3"], axis=0)
-        normwmean_actemb["layer 4"] = np.mean(self.actemb["layer 4"], axis=0)
+        # normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
+        # normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
+        # normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
+        # normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
+        # normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
         
-        normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
-        normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
-        normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
-        normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
-        normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
-        
-        print(np.array(normwmean_actemb["layer 0"]))
-        print(np.array(normwmean_actemb_mod["layer 1"]))
-        print(np.array(normwmean_actemb_mod["layer 2"]))
-        print(np.array(normwmean_actemb_mod["layer 3"]))
-        print(np.array(normwmean_actemb_mod["layer 4"]))
+        # print(np.array(normwmean_actemb["layer 0"]))
+        # print(np.array(normwmean_actemb_mod["layer 1"]))
+        # print(np.array(normwmean_actemb_mod["layer 2"]))
+        # print(np.array(normwmean_actemb_mod["layer 3"]))
+        # print(np.array(normwmean_actemb_mod["layer 4"]))
         
         actlistmean = np.array([
-            np.log(np.array(normwmean_actemb_mod["layer 0"])),
-            np.log(np.array(normwmean_actemb_mod["layer 1"])),
-            np.log(np.array(normwmean_actemb_mod["layer 2"])),
-            np.log(np.array(normwmean_actemb_mod["layer 3"])),
-            np.log(np.array(normwmean_actemb_mod["layer 4"])),
+            np.log(np.array(normwmean_actemb["layer 0"])),
+            np.log(np.array(normwmean_actemb["layer 1"])),
+            np.log(np.array(normwmean_actemb["layer 2"])),
+            np.log(np.array(normwmean_actemb["layer 3"])),
+            np.log(np.array(normwmean_actemb["layer 4"])),
             # mean_acts["last layer"]
             ])
 
-        self.plotting(data=actlistmean, name = f"figures/activation_normwmean_{self.name}.png")
+        self.plotting(data=actlistmean, name = f"mfigures/activation_normwmean_{self.name}.png")
 
     def plotting(self, data, name):
         # Create the heatmap
@@ -334,7 +328,7 @@ class gradients_norm:
         self.name = name
         
         try:
-            with open(f"data/grad_norm_{name}.pkl", "rb") as f:
+            with open(f"mdata/grad_norm_{name}.pkl", "rb") as f:
                 grads = pickle.load(f)    
             self.grads = grads  
         except:
@@ -375,7 +369,7 @@ class gradients_norm:
             grad_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
             grad_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
             
-        with open(f"data/grad_norm_{self.name}.pkl", "wb") as f:
+        with open(f"mdata/grad_norm_{self.name}.pkl", "wb") as f:
             pickle.dump(grad_embeds, f)
             
         return grad_embeds
@@ -409,7 +403,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        self.plotting(data=gradlist, name = f"figures/grad_normwmean_{self.name}.png")
+        self.plotting(data=gradlist, name = f"mfigures/grad_normwmean_{self.name}.png")
     
     def normwmean(self):
         
@@ -455,7 +449,7 @@ class gradients_norm:
             # mean_acts["last layer"]
             ])
         
-        self.plotting(data=gradlistmean, name = "figures/grad_layer_seq_normwmean_grad_post_mlp_addn_resid.png")
+        self.plotting(data=gradlistmean, name = "mfigures/grad_layer_seq_normwmean_grad_post_mlp_addn_resid.png")
 
     def plotting(self, data, name):
         # Create the heatmap
@@ -535,20 +529,22 @@ if __name__ == "__main__":
     try:
         with open("data/activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
             activation_embeds = pickle.load(f)
+        with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f_:
+            activation_embeds_mean = pickle.load(f_)
     except:
         activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
-        with open("data/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
+        with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
             pickle.dump(activation_embeds, f)
     
     name = args.title
     
-    normed_class = normed(activation_embeds, args.title, name)
-    normed_class.normwmean()
-    normed_class.norm()
+    normed_class = normed(args.title, name)
+    normed_class.normwmean(activation_embeds_mean)
+    normed_class.norm(activation_embeds)
     
-    normed_grad = gradients_norm(model, val_dataloader, args.title, name)
-    normed_grad.norm()
-    normed_grad.normwmean()
+    # normed_grad = gradients_norm(model, val_dataloader, args.title, name)
+    # normed_grad.norm()
+    # normed_grad.normwmean()
     
     # normed_single = single_sample_act_norm(model, val_data)
     # normed_single.norm()
