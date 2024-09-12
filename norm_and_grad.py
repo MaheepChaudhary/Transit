@@ -20,9 +20,9 @@ class normed_pythia:
         
         try:
             with open(f"data/pythia_activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
-                activation_embeds = pickle.load(f)
+                self.activation_embeds = pickle.load(f)
         except:
-            activation_embeds = self.activation_embeds_fn()
+            self.activation_embeds = self.activation_embeds_fn()
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -58,7 +58,7 @@ class normed_pythia:
         return activation_embeds
 
         
-    def norm(self, data):
+    def norm(self):
         
         # Additional norm calculations for nested structures
         # assert np.array(self.actemb["layer 0"]).shape[1] == 128
@@ -71,11 +71,12 @@ class normed_pythia:
         }
         
         
-        norm_actemb["layer 0"] = np.mean(data["layer 0"], axis=0)
-        norm_actemb["layer 1"] = np.mean(data["layer 1"], axis=0)
-        norm_actemb["layer 2"] = np.mean(data["layer 2"], axis=0)
-        norm_actemb["layer 3"] = np.mean(data["layer 3"], axis=0)
-        norm_actemb["layer 4"] = np.mean(data["layer 4"], axis=0)
+        norm_actemb["layer 0"] = np.mean(self.activation_embeds["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(self.activation_embeds["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(self.activation_embeds["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(self.activation_embeds["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(self.activation_embeds["layer 4"], axis=0)
+        
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         print(np.array(norm_actemb["layer 0"]).shape)
         

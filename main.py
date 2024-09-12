@@ -46,20 +46,14 @@ if __name__ == "__main__":
     
     name = args.title
     
-    normed_class = normed_pythia(args.title, name)
-    normed_class.normwmean(activation_embeds_mean)
-    normed_class.norm(activation_embeds)
+    normed_class = normed_pythia(
+        title=args.title, 
+        name = name, 
+        model = model, 
+        dataloader = val_dataloader, 
+        batch_size=args.batch_size)
     
-    # Computing the activations
-    try:
-        with open("data/activation_embeds_post_mlp_addn_resid.pkl", "rb") as f:
-            activation_embeds = pickle.load(f)
-        with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "rb") as f_:
-            activation_embeds_mean = pickle.load(f_)
-    except:
-        activation_embeds = activation_embeds_fn(model, val_dataloader, args.batch_size)
-        with open("mdata/activation_embeds_post_mlp_addn_resid.pkl", "wb") as f:
-            pickle.dump(activation_embeds, f)
+    normed_class.norm()
     
 
     
