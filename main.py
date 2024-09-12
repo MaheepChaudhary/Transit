@@ -24,12 +24,15 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="pythia")
     
     args = parser.parse_args()
+    name = args.title
     
     if args.model == "pythia":
         model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
     elif args.model == "gpt2":
         model = LanguageModel("openai-community/gpt2", device_map = "cpu")
     
+    train_data, val_data = inspect_data(data)
+    print();print(model);print()
     # Tokenizing the text data
     try:
         with open(f"data/val_data_b{args.batch_size}.pkl", "rb") as f:
@@ -40,20 +43,48 @@ if __name__ == "__main__":
         
         with open(f"data/val_data_b{args.batch_size}.pkl", "wb") as f:
             pickle.dump(val_dataloader, f)
-            
-    train_data, val_data = inspect_data(data)
-    print();print(model);print()
     
-    name = args.title
     
-    normed_class = normed_pythia(
-        title=args.title, 
-        name = name, 
-        model = model, 
-        dataloader = val_dataloader, 
-        batch_size=args.batch_size)
     
-    normed_class.norm()
+    if args.model == "pythia":
+        
+        normed_class = act_pythia(
+            title=args.title, 
+            name = name, 
+            model = model, 
+            dataloader = val_dataloader, 
+            batch_size=args.batch_size)
+        
+        normed_class.norm()
+        
+        grad_class = grad_pythia(
+            title=args.title, 
+            name = name, 
+            model = model, 
+            dataloader = val_dataloader, 
+            batch_size=args.batch_size)
+        
+        grad_class.grad_norm()
+    
+    elif args.model == "gpt2":
+        pass
+        # normed_class = normed_gpt2(
+        #     title=args.title, 
+        #     name = name, 
+        #     model = model, 
+        #     dataloader = val_dataloader, 
+        #     batch_size=args.batch_size)
+        
+        # normed_class.norm()
+        
+        # grad_class = grad_gpt2(
+        #     title=args.title, 
+        #     name = name, 
+        #     model = model, 
+        #     dataloader = val_dataloader, 
+        #     batch_size=args.batch_size)
+        
+        # grad_class.grad_norm()
     
 
     

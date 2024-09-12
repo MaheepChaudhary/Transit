@@ -1,7 +1,7 @@
 from imports import *
 
 
-class normed_pythia:
+class act_pythia:
 
     def __init__(
         self, 
@@ -157,7 +157,7 @@ class normed_pythia:
         plt.close()
     
 
-class gradients_norm:
+class grad_pythia:
     
     def __init__(self, model, dataloader, title, name):
         
