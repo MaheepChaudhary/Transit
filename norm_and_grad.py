@@ -534,11 +534,11 @@ class act_pythia_mlp:
             "layer 4": []
         }
         
-        normwmean_actemb_mlp["layer 0"] = t.mean(wmean_actemb_mlp["layer 0"], dim=0).squeeze(0)
-        normwmean_actemb_mlp["layer 1"] = t.mean(wmean_actemb_mlp["layer 1"], axis=0).squeeze(0)
-        normwmean_actemb_mlp["layer 2"] = t.mean(wmean_actemb_mlp["layer 2"], axis=0).squeeze(0)
-        normwmean_actemb_mlp["layer 3"] = t.mean(wmean_actemb_mlp["layer 3"], axis=0).squeeze(0)
-        normwmean_actemb_mlp["layer 4"] = t.mean(wmean_actemb_mlp["layer 4"], axis=0).squeeze(0)
+        normwmean_actemb_mlp["layer 0"] = np.mean(np.array(wmean_actemb_mlp["layer 0"]), axis=0)
+        normwmean_actemb_mlp["layer 1"] = np.mean(np.array(wmean_actemb_mlp["layer 1"]), axis=0)
+        normwmean_actemb_mlp["layer 2"] = np.mean(np.array(wmean_actemb_mlp["layer 2"]), axis=0)
+        normwmean_actemb_mlp["layer 3"] = np.mean(np.array(wmean_actemb_mlp["layer 3"]), axis=0)
+        normwmean_actemb_mlp["layer 4"] = np.mean(np.array(wmean_actemb_mlp["layer 4"]), axis=0)
 
         actlistmean_mlp = np.array([
             np.log(np.array(normwmean_actemb_mlp["layer 0"])),
@@ -861,6 +861,83 @@ class act_pythia_attention:
         print(actlist)
         self.plotting(data=actlist, name = f"figures/pythia_activation_embeds_{self.name}.png")
 
+    def act_normwmean_fn_attn(self):
+        
+        normwmean_actemb_attn = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        for batch in tqdm(self.dataloader):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+                output0_attn = self.model.gpt_neox.layers[0].attention.output[0].save()
+                output1_attn = self.model.gpt_neox.layers[1].attention.output[0].save()
+                output2_attn = self.model.gpt_neox.layers[2].attention.output[0].save()
+                output3_attn = self.model.gpt_neox.layers[3].attention.output[0].save()
+                output4_attn = self.model.gpt_neox.layers[4].attention.output[0].save()
+                
+            
+            output0_attn  = output0_attn.detach()
+            output1_attn  = output1_attn.detach()
+            output2_attn  = output2_attn.detach()
+            output3_attn  = output3_attn.detach()
+            output4_attn  = output4_attn.detach()
+
+            output0mean_attn  = output0_attn - t.mean(output0_attn, dim = 0, keepdim = True)
+            output1mean_attn  = output1_attn - t.mean(output1_attn, dim = 0, keepdim = True)
+            output2mean_attn  = output2_attn - t.mean(output2_attn, dim = 0, keepdim = True)
+            output3mean_attn  = output3_attn - t.mean(output3_attn, dim = 0, keepdim = True)
+            output4mean_attn  = output4_attn - t.mean(output4_attn, dim = 0, keepdim = True)
+            
+            normwmean_actemb_attn["layer 0"].append(t.mean(t.norm(output0mean_attn, dim = -1), dim = 0))
+            normwmean_actemb_attn["layer 1"].append(t.mean(t.norm(output1mean_attn, dim = -1), dim = 0))
+            normwmean_actemb_attn["layer 2"].append(t.mean(t.norm(output2mean_attn, dim = -1), dim = 0))
+            normwmean_actemb_attn["layer 3"].append(t.mean(t.norm(output3mean_attn, dim = -1), dim = 0))
+            normwmean_actemb_attn["layer 4"].append(t.mean(t.norm(output4mean_attn, dim = -1), dim = 0))
+            
+            del output0_attn, output1_attn, output2_attn, output3_attn, output4_attn
+            gc.collect()
+            
+        return normwmean_actemb_attn
+
+    def act_normwmean_attn(self):
+        
+        try:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "rb") as f:
+                wmean_actemb_attn = pickle.load(f)
+        except:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "wb") as f:
+                wmean_actemb_attn = self.act_normwmean_fn_attn()
+                pickle.dump(wmean_actemb_attn, f)
+        
+        normwmean_actemb_attn = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        print(np.array(wmean_actemb_attn["layer 0"]).shape)
+        normwmean_actemb_attn["layer 0"] = np.mean(np.array(wmean_actemb_attn["layer 0"]), axis=0)
+        normwmean_actemb_attn["layer 1"] = np.mean(np.array(wmean_actemb_attn["layer 1"]), axis=0)
+        normwmean_actemb_attn["layer 2"] = np.mean(np.array(wmean_actemb_attn["layer 2"]), axis=0)
+        normwmean_actemb_attn["layer 3"] = np.mean(np.array(wmean_actemb_attn["layer 3"]), axis=0)
+        normwmean_actemb_attn["layer 4"] = np.mean(np.array(wmean_actemb_attn["layer 4"]), axis=0)
+
+        actlistmean_attn = np.array([
+            np.log(np.array(normwmean_actemb_attn["layer 0"])),
+            np.log(np.array(normwmean_actemb_attn["layer 1"])),
+            np.log(np.array(normwmean_actemb_attn["layer 2"])),
+            np.log(np.array(normwmean_actemb_attn["layer 3"])),
+            np.log(np.array(normwmean_actemb_attn["layer 4"])),
+            ])
+
+        self.plotting(data=actlistmean_attn, name = f"figures/pythia_wmean_activation_embeds_{self.name}.png")
 
 
     def plotting(self, data, name):
@@ -977,6 +1054,87 @@ class grad_pythia_attention:
             ])
         print(gradlist)
         self.plotting(data=gradlist, name = f"figures/pythia_grad_embed_{self.name}.png")
+
+
+    def gradwmean_fn_attn(self):
+        
+        normwmean_grademb_attn = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        for batch in tqdm(self.dataloader):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+                output0_grad_attn = self.model.gpt_neox.layers[0].attention.output[0].grad.save()
+                output1_grad_attn = self.model.gpt_neox.layers[1].attention.output[0].grad.save()
+                output2_grad_attn = self.model.gpt_neox.layers[2].attention.output[0].grad.save()
+                output3_grad_attn = self.model.gpt_neox.layers[3].attention.output[0].grad.save()
+                output4_grad_attn = self.model.gpt_neox.layers[4].attention.output[0].grad.save()
+                
+                self.model.output.logits.sum().backward()
+            
+            output0_grad_attn = output0_grad_attn.detach()
+            output1_grad_attn = output1_grad_attn.detach()
+            output2_grad_attn = output2_grad_attn.detach()
+            output3_grad_attn = output3_grad_attn.detach()
+            output4_grad_attn = output4_grad_attn.detach()
+                
+            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            output0mean_attn = output0_grad_attn - t.mean(output0_grad_attn, dim = 0, keepdim = True)
+            output1mean_attn = output1_grad_attn - t.mean(output1_grad_attn, dim = 0, keepdim = True)
+            output2mean_attn = output2_grad_attn - t.mean(output2_grad_attn, dim = 0, keepdim = True)
+            output3mean_attn = output3_grad_attn - t.mean(output3_grad_attn, dim = 0, keepdim = True)
+            output4mean_attn = output4_grad_attn - t.mean(output4_grad_attn, dim = 0, keepdim = True)
+            
+            normwmean_grademb_attn["layer 0"].append(t.mean(t.norm(output0mean_attn, dim = -1), dim = 0))
+            normwmean_grademb_attn["layer 1"].append(t.mean(t.norm(output1mean_attn, dim = -1), dim = 0))
+            normwmean_grademb_attn["layer 2"].append(t.mean(t.norm(output2mean_attn, dim = -1), dim = 0))
+            normwmean_grademb_attn["layer 3"].append(t.mean(t.norm(output3mean_attn, dim = -1), dim = 0))
+            normwmean_grademb_attn["layer 4"].append(t.mean(t.norm(output4mean_attn, dim = -1), dim = 0))
+            
+            
+        return normwmean_grademb_attn
+
+    def grad_normwmean_attn(self):
+        
+        try:
+            with open(f"data/pythia_wmean_grad_embeds_{self.name}.pkl", "rb") as f:
+                wmean_grademb_attn = pickle.load(f)
+        except:
+            with open(f"data/pythia_wmean_grad_embeds_{self.name}.pkl", "wb") as f:
+                wmean_grademb_attn = self.gradwmean_fn_attn()
+                pickle.dump(wmean_grademb_attn, f)
+        
+        normwmean_grademb_attn = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        normwmean_grademb_attn["layer 0"] = np.mean(np.array(wmean_grademb_attn["layer 0"]), axis=0)
+        normwmean_grademb_attn["layer 1"] = np.mean(np.array(wmean_grademb_attn["layer 1"]), axis=0)
+        normwmean_grademb_attn["layer 2"] = np.mean(np.array(wmean_grademb_attn["layer 2"]), axis=0)
+        normwmean_grademb_attn["layer 3"] = np.mean(np.array(wmean_grademb_attn["layer 3"]), axis=0)
+        normwmean_grademb_attn["layer 4"] = np.mean(np.array(wmean_grademb_attn["layer 4"]), axis=0)
+
+        gradlistmean_grad_attn = np.array([
+            np.log(np.array(normwmean_grademb_attn["layer 0"])),
+            np.log(np.array(normwmean_grademb_attn["layer 1"])),
+            np.log(np.array(normwmean_grademb_attn["layer 2"])),
+            np.log(np.array(normwmean_grademb_attn["layer 3"])),
+            np.log(np.array(normwmean_grademb_attn["layer 4"])),
+            ])
+
+        self.plotting_grad(
+            data=gradlistmean_grad_attn, 
+            name = f"figures/pythia_wmean_gradients_embeds_{self.name}.png"
+            )
 
 
     def plotting(self, data, name):

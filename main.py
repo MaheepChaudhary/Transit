@@ -102,7 +102,8 @@ if __name__ == "__main__":
                 dataloader = val_dataloader, 
                 )
             
-            # normed_class_attention.norm()
+            normed_class_attention.norm()
+            normed_class_attention.act_normwmean_attn()
         
             grad_class_attention = grad_pythia_attention(
                 title=args.title, 
