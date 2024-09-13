@@ -1053,7 +1053,7 @@ class grad_pythia_attention:
             # mean_acts["last layer"]
             ])
         print(gradlist)
-        self.plotting(data=gradlist, name = f"figures/pythia_grad_embed_{self.name}.png")
+        self.plotting_grad(data=gradlist, name = f"figures/pythia_grad_embed_{self.name}.png")
 
 
     def gradwmean_fn_attn(self):
@@ -1137,7 +1137,7 @@ class grad_pythia_attention:
             )
 
 
-    def plotting(self, data, name):
+    def plotting_grad(self, data, name):
         # Create the heatmap
         fig, ax = plt.subplots(figsize=(10, 5))  # Set figure size
         cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
