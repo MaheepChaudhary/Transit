@@ -90,7 +90,7 @@ class act_pythia_resid_post_mlp_addn:
         print(actlist)
         self.plotting(data=actlist, name = f"figures/pythia_activation_embeds_{self.name}.png")
 
-    def act_normwmean_fn_ppma(self, data):
+    def act_normwmean_fn_ppma(self):
         
         normwmean_actemb_ppma = {
             "layer 0": [],
@@ -100,7 +100,7 @@ class act_pythia_resid_post_mlp_addn:
             "layer 4": []
         }
         
-        for batch in tqdm(data):
+        for batch in tqdm(self.dataloader):
             
             with self.model.trace(batch["input_ids"]) as tracer:
                 output0_ppma = self.model.gpt_neox.layers[0].output[0].save()
@@ -124,14 +124,14 @@ class act_pythia_resid_post_mlp_addn:
             
         return normwmean_actemb_ppma
 
-    def act_normwmean_ppma(self, data):
+    def act_normwmean_ppma(self):
         
         try:
             with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "rb") as f:
                 wmean_actemb_ppma = pickle.load(f)
         except:
             with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "wb") as f:
-                wmean_actemb_ppma = self.act_normwmean_fn_ppma(data)
+                wmean_actemb_ppma = self.act_normwmean_fn_ppma()
                 pickle.dump(wmean_actemb_ppma, f)
         
         normwmean_actemb_ppma = {
@@ -273,7 +273,7 @@ class grad_pythia_resid_post_mlp_addn:
         print(gradlist)
         self.plotting(data=gradlist, name = f"figures/pythia_grad_embed_{self.name}.png")
     
-    def gradwmean_fn_ppma(self, data):
+    def gradwmean_fn_ppma(self):
         
         normwmean_grademb_ppma = {
             "layer 0": [],
@@ -283,7 +283,7 @@ class grad_pythia_resid_post_mlp_addn:
             "layer 4": []
         }
         
-        for batch in tqdm(data):
+        for batch in tqdm(self.dataloader):
             
             with self.model.trace(batch["input_ids"]) as tracer:
                 output0_grad_ppma = self.model.gpt_neox.layers[0].output[0].save()
@@ -307,14 +307,14 @@ class grad_pythia_resid_post_mlp_addn:
             
         return normwmean_grademb_ppma
 
-    def grad_normwmean_ppma(self, data):
+    def grad_normwmean_ppma(self):
         
         try:
             with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "rb") as f:
                 wmean_grademb_ppma = pickle.load(f)
         except:
             with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "wb") as f:
-                wmean_grademb_ppma = self.gradwmean_fn_ppma(data)
+                wmean_grademb_ppma = self.gradwmean_fn_ppma()
                 pickle.dump(wmean_grademb_ppma, f)
         
         normwmean_grademb_ppma = {
