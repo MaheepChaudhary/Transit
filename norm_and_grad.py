@@ -90,50 +90,73 @@ class act_pythia_resid_post_mlp_addn:
         print(actlist)
         self.plotting(data=actlist, name = f"figures/pythia_activation_embeds_{self.name}.png")
 
+    def act_normwmean_fn_ppma(self, data):
+        
+        normwmean_actemb_ppma = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
+        
+        for batch in tqdm(data):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+                output0_ppma = self.model.gpt_neox.layers[0].output[0].save()
+                output1_ppma = self.model.gpt_neox.layers[1].output[0].save()
+                output2_ppma = self.model.gpt_neox.layers[2].output[0].save()
+                output3_ppma = self.model.gpt_neox.layers[3].output[0].save()
+                output4_ppma = self.model.gpt_neox.layers[4].output[0].save()
+                
+            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            output0mean_ppma = output0_ppma - t.mean(output0_ppma, dim = 0, keepdim = True)
+            output1mean_ppma = output1_ppma - t.mean(output1_ppma, dim = 0, keepdim = True)
+            output2mean_ppma = output2_ppma - t.mean(output2_ppma, dim = 0, keepdim = True)
+            output3mean_ppma = output3_ppma - t.mean(output3_ppma, dim = 0, keepdim = True)
+            output4mean_ppma = output4_ppma - t.mean(output4_ppma, dim = 0, keepdim = True)
+            
+            normwmean_actemb_ppma["layer 0"].append(t.mean(t.norm(output0mean_ppma, dim = -1), dim = 0))
+            normwmean_actemb_ppma["layer 1"].append(t.mean(t.norm(output1mean_ppma, dim = -1), dim = 0))
+            normwmean_actemb_ppma["layer 2"].append(t.mean(t.norm(output2mean_ppma, dim = -1), dim = 0))
+            normwmean_actemb_ppma["layer 3"].append(t.mean(t.norm(output3mean_ppma, dim = -1), dim = 0))
+            normwmean_actemb_ppma["layer 4"].append(t.mean(t.norm(output4mean_ppma, dim = -1), dim = 0))
+            
+        return normwmean_actemb_ppma
 
-    # def normwmean(self, data):
+    def act_normwmean_ppma(self, data):
         
-    #     # Additional norm calculations for nested structures
-    #     # assert np.array(self.actemb["layer 0"]).shape[1] == 128
-    #     normwmean_actemb = {
-    #         "layer 0": [],
-    #         "layer 1": [],
-    #         "layer 2": [],
-    #         "layer 3": [],
-    #         "layer 4": []
-    #     }
+        try:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "rb") as f:
+                wmean_actemb_ppma = pickle.load(f)
+        except:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "wb") as f:
+                wmean_actemb_ppma = self.act_normwmean_fn_ppma(data)
+                pickle.dump(wmean_actemb_ppma, f)
         
-    #     normwmean_actemb_mod = {
-    #         "layer 0": [],
-    #         "layer 1": [],
-    #         "layer 2": [],
-    #         "layer 3": [],
-    #         "layer 4": []
-    #     }
+        normwmean_actemb_ppma = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
         
-    #     normwmean_actemb["layer 0"] = np.mean(data["layer 0"], axis=0).squeeze(0)
-    #     normwmean_actemb["layer 1"] = np.mean(data["layer 1"], axis=0).squeeze(0)
-    #     normwmean_actemb["layer 2"] = np.mean(data["layer 2"], axis=0).squeeze(0)
-    #     normwmean_actemb["layer 3"] = np.mean(data["layer 3"], axis=0).squeeze(0)
-    #     normwmean_actemb["layer 4"] = np.mean(data["layer 4"], axis=0).squeeze(0)
-        
-    #     normwmean_actemb_mod["layer 0"] = np.array(normwmean_actemb["layer 0"]) - np.mean(np.array(normwmean_actemb["layer 0"]), axis = 0)
-    #     normwmean_actemb_mod["layer 1"] = np.array(normwmean_actemb["layer 1"]) - np.mean(np.array(normwmean_actemb["layer 1"]), axis = 0)
-    #     normwmean_actemb_mod["layer 2"] = np.array(normwmean_actemb["layer 2"]) - np.mean(np.array(normwmean_actemb["layer 2"]), axis = 0)
-    #     normwmean_actemb_mod["layer 3"] = np.array(normwmean_actemb["layer 3"]) - np.mean(np.array(normwmean_actemb["layer 3"]), axis = 0)
-    #     normwmean_actemb_mod["layer 4"] = np.array(normwmean_actemb["layer 4"]) - np.mean(np.array(normwmean_actemb["layer 4"]), axis = 0)
-        
-        
-    #     actlistmean = np.array([
-    #         np.log(np.array(normwmean_actemb["layer 0"])),
-    #         np.log(np.array(normwmean_actemb["layer 1"])),
-    #         np.log(np.array(normwmean_actemb["layer 2"])),
-    #         np.log(np.array(normwmean_actemb["layer 3"])),
-    #         np.log(np.array(normwmean_actemb["layer 4"])),
-    #         # mean_acts["last layer"]
-    #         ])
+        normwmean_actemb_ppma["layer 0"] = t.mean(data["layer 0"], dim=0).squeeze(0)
+        normwmean_actemb_ppma["layer 1"] = t.mean(data["layer 1"], axis=0).squeeze(0)
+        normwmean_actemb_ppma["layer 2"] = t.mean(data["layer 2"], axis=0).squeeze(0)
+        normwmean_actemb_ppma["layer 3"] = t.mean(data["layer 3"], axis=0).squeeze(0)
+        normwmean_actemb_ppma["layer 4"] = t.mean(data["layer 4"], axis=0).squeeze(0)
 
-    #     self.plotting(data=actlistmean, name = f"mfigures/activation_normwmean_{self.name}.png")
+        actlistmean_ppma = np.array([
+            np.log(np.array(normwmean_actemb_ppma["layer 0"])),
+            np.log(np.array(normwmean_actemb_ppma["layer 1"])),
+            np.log(np.array(normwmean_actemb_ppma["layer 2"])),
+            np.log(np.array(normwmean_actemb_ppma["layer 3"])),
+            np.log(np.array(normwmean_actemb_ppma["layer 4"])),
+            ])
+
+        self.plotting(data=actlistmean_ppma, name = f"figures/pythia_wmean_activation_embeds_{self.name}.png")
 
     def plotting(self, data, name):
         # Create the heatmap
@@ -250,51 +273,73 @@ class grad_pythia_resid_post_mlp_addn:
         print(gradlist)
         self.plotting(data=gradlist, name = f"figures/pythia_grad_embed_{self.name}.png")
     
-    # def normwmean(self):
+    def gradwmean_fn_ppma(self, data):
         
-    #     # Additional norm calculations for nested structures
-    #     # assert np.array(self.actemb["layer 0"]).shape[1] == 128
-    #     normwmean_grad = {
-    #         "layer 0": [],
-    #         "layer 1": [],
-    #         "layer 2": [],
-    #         "layer 3": [],
-    #         "layer 4": []
-    #     }
+        normwmean_grademb_ppma = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
         
-    #     normwmean_grad_mod = {
-    #         "layer 0": [],
-    #         "layer 1": [],
-    #         "layer 2": [],
-    #         "layer 3": [],
-    #         "layer 4": []
-    #     }
+        for batch in tqdm(data):
+            
+            with self.model.trace(batch["input_ids"]) as tracer:
+                output0_grad_ppma = self.model.gpt_neox.layers[0].output[0].save()
+                output1_grad_ppma = self.model.gpt_neox.layers[1].output[0].save()
+                output2_grad_ppma = self.model.gpt_neox.layers[2].output[0].save()
+                output3_grad_ppma = self.model.gpt_neox.layers[3].output[0].save()
+                output4_grad_ppma = self.model.gpt_neox.layers[4].output[0].save()
+                
+            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            output0mean_ppma = output0_grad_ppma - t.mean(output0_grad_ppma, dim = 0, keepdim = True)
+            output1mean_ppma = output1_grad_ppma - t.mean(output1_grad_ppma, dim = 0, keepdim = True)
+            output2mean_ppma = output2_grad_ppma - t.mean(output2_grad_ppma, dim = 0, keepdim = True)
+            output3mean_ppma = output3_grad_ppma - t.mean(output3_grad_ppma, dim = 0, keepdim = True)
+            output4mean_ppma = output4_grad_ppma - t.mean(output4_grad_ppma, dim = 0, keepdim = True)
+            
+            normwmean_grademb_ppma["layer 0"].append(t.mean(t.norm(output0mean_ppma, dim = -1), dim = 0))
+            normwmean_grademb_ppma["layer 1"].append(t.mean(t.norm(output1mean_ppma, dim = -1), dim = 0))
+            normwmean_grademb_ppma["layer 2"].append(t.mean(t.norm(output2mean_ppma, dim = -1), dim = 0))
+            normwmean_grademb_ppma["layer 3"].append(t.mean(t.norm(output3mean_ppma, dim = -1), dim = 0))
+            normwmean_grademb_ppma["layer 4"].append(t.mean(t.norm(output4mean_ppma, dim = -1), dim = 0))
+            
+        return normwmean_grademb_ppma
+
+    def grad_normwmean_ppma(self, data):
         
-    #     normwmean_grad["layer 0"] = np.mean(self.grads["layer 0"], axis=0)
-    #     normwmean_grad["layer 1"] = np.mean(self.grads["layer 1"], axis=0)
-    #     normwmean_grad["layer 2"] = np.mean(self.grads["layer 2"], axis=0)
-    #     normwmean_grad["layer 3"] = np.mean(self.grads["layer 3"], axis=0)
-    #     normwmean_grad["layer 4"] = np.mean(self.grads["layer 4"], axis=0)
-    
-    #     normwmean_grad_mod["layer 0"] = np.array(normwmean_grad["layer 0"]) - np.mean(np.array(normwmean_grad["layer 0"]), axis = 0)
-    #     normwmean_grad_mod["layer 1"] = np.array(normwmean_grad["layer 1"]) - np.mean(np.array(normwmean_grad["layer 1"]), axis = 0)
-    #     normwmean_grad_mod["layer 2"] = np.array(normwmean_grad["layer 2"]) - np.mean(np.array(normwmean_grad["layer 2"]), axis = 0)
-    #     normwmean_grad_mod["layer 3"] = np.array(normwmean_grad["layer 3"]) - np.mean(np.array(normwmean_grad["layer 3"]), axis = 0)
-    #     normwmean_grad_mod["layer 4"] = np.array(normwmean_grad["layer 4"]) - np.mean(np.array(normwmean_grad["layer 4"]), axis = 0)
+        try:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "rb") as f:
+                wmean_grademb_ppma = pickle.load(f)
+        except:
+            with open(f"data/pythia_wmean_activation_embeds_{self.name}.pkl", "wb") as f:
+                wmean_grademb_ppma = self.gradwmean_fn_ppma(data)
+                pickle.dump(wmean_grademb_ppma, f)
         
-    #     # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        normwmean_grademb_ppma = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": []
+        }
         
-        
-    #     gradlistmean = np.array([
-    #         np.log(np.array(normwmean_grad_mod["layer 0"])),
-    #         np.log(np.array(normwmean_grad_mod["layer 1"])),
-    #         np.log(np.array(normwmean_grad_mod["layer 2"])),
-    #         np.log(np.array(normwmean_grad_mod["layer 3"])),
-    #         np.log(np.array(normwmean_grad_mod["layer 4"])),
-    #         # mean_acts["last layer"]
-    #         ])
-        
-    #     self.plotting(data=gradlistmean, name = "mfigures/grad_layer_seq_normwmean_grad_post_mlp_addn_resid.png")
+        normwmean_grademb_ppma["layer 0"] = t.mean(data["layer 0"], dim=0).squeeze(0)
+        normwmean_grademb_ppma["layer 1"] = t.mean(data["layer 1"], axis=0).squeeze(0)
+        normwmean_grademb_ppma["layer 2"] = t.mean(data["layer 2"], axis=0).squeeze(0)
+        normwmean_grademb_ppma["layer 3"] = t.mean(data["layer 3"], axis=0).squeeze(0)
+        normwmean_grademb_ppma["layer 4"] = t.mean(data["layer 4"], axis=0).squeeze(0)
+
+        gradlistmean_ppma = np.array([
+            np.log(np.array(normwmean_grademb_ppma["layer 0"])),
+            np.log(np.array(normwmean_grademb_ppma["layer 1"])),
+            np.log(np.array(normwmean_grademb_ppma["layer 2"])),
+            np.log(np.array(normwmean_grademb_ppma["layer 3"])),
+            np.log(np.array(normwmean_grademb_ppma["layer 4"])),
+            ])
+
+        self.plotting(data=gradlistmean_ppma, name = f"figures/pythia_wmean_activation_embeds_{self.name}.png")
 
     def plotting(self, data, name):
         # Create the heatmap
@@ -1411,7 +1456,6 @@ class grad_gpt2_mlp:
         plt.close()
 
 
-
 class act_gpt2_attention:
 
     def __init__(
@@ -1725,7 +1769,6 @@ class grad_gpt2_attention:
         # Show the heatmap
         plt.savefig(name)
         plt.close()
-
 
 
 

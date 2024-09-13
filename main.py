@@ -57,6 +57,7 @@ if __name__ == "__main__":
                 )
             
             normed_class.norm()
+            normed_class.act_normwmean_ppma()
             
             grad_class = grad_pythia_resid_post_mlp_addn(
                 title=args.title, 
@@ -66,6 +67,9 @@ if __name__ == "__main__":
                 )
             
             grad_class.grad_norm()
+            grad_class.grad_normwmean_ppma()
+            
+            
         
         elif args.title == "mlp_output":
             
@@ -76,7 +80,7 @@ if __name__ == "__main__":
                 dataloader = val_dataloader, 
                 )
             
-            normed_class_mlp.norm()
+            # normed_class_mlp.norm()
         
             grad_class_mlp = grad_pythia_mlp(
                 title=args.title, 
@@ -96,7 +100,7 @@ if __name__ == "__main__":
                 dataloader = val_dataloader, 
                 )
             
-            normed_class_attention.norm()
+            # normed_class_attention.norm()
         
             grad_class_attention = grad_pythia_attention(
                 title=args.title, 
