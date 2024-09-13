@@ -98,14 +98,14 @@ if __name__ == "__main__":
             
             normed_class_attention.norm()
         
-        grad_class_attention = grad_pythia_attention(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
-        
-        grad_class_attention.grad_norm()
+            grad_class_attention = grad_pythia_attention(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            grad_class_attention.grad_norm()
     
     elif args.model == "gpt2":
         
@@ -150,23 +150,23 @@ if __name__ == "__main__":
         
         elif args.title == "attn_output":
             
-            normed_class_mlp = act_gpt2_attention(
+            normed_class_attention = act_gpt2_attention(
                 title=args.title, 
                 name = name, 
                 model = model, 
                 dataloader = val_dataloader, 
                 )
             
-            normed_class_mlp.norm()
+            normed_class_attention.norm()
         
-        grad_class_mlp = grad_gpt2_attention(
-            title=args.title, 
-            name = name, 
-            model = model, 
-            dataloader = val_dataloader, 
-            )
-        
-        grad_class_mlp.grad_norm()
+            grad_class_attention = grad_gpt2_attention(
+                title=args.title, 
+                name = name, 
+                model = model, 
+                dataloader = val_dataloader, 
+                )
+            
+            grad_class_attention.grad_norm()
     
 
     
