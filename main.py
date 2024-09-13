@@ -113,6 +113,7 @@ if __name__ == "__main__":
                 )
             
             grad_class_attention.grad_norm()
+            grad_class_attention.grad_normwmean_attn()
     
     elif args.model == "gpt2":
         
