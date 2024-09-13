@@ -80,7 +80,8 @@ if __name__ == "__main__":
                 dataloader = val_dataloader, 
                 )
             
-            # normed_class_mlp.norm()
+            normed_class_mlp.norm()
+            normer_class_mlp = normed_class_mlp.act_normwmean_mlp()
         
             grad_class_mlp = grad_pythia_mlp(
                 title=args.title, 
@@ -90,6 +91,7 @@ if __name__ == "__main__":
                 )
         
             grad_class_mlp.grad_norm()
+            grad_class_mlp.grad_normwmean_mlp()
         
         elif args.title == "attn_output":
             
