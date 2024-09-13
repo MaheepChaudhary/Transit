@@ -108,8 +108,13 @@ class act_pythia_resid_post_mlp_addn:
                 output2_ppma = self.model.gpt_neox.layers[2].output[0].save()
                 output3_ppma = self.model.gpt_neox.layers[3].output[0].save()
                 output4_ppma = self.model.gpt_neox.layers[4].output[0].save()
-                
-            # firstly taking the norm for the batch of 2 and then for the dimension of every token
+            
+            output0_ppma = output0_ppma.detach()
+            output1_ppma = output1_ppma.detach()
+            output2_ppma = output2_ppma.detach()
+            output3_ppma = output3_ppma.detach()
+            output4_ppma = output4_ppma.detach()
+
             output0mean_ppma = output0_ppma - t.mean(output0_ppma, dim = 0, keepdim = True)
             output1mean_ppma = output1_ppma - t.mean(output1_ppma, dim = 0, keepdim = True)
             output2mean_ppma = output2_ppma - t.mean(output2_ppma, dim = 0, keepdim = True)
@@ -121,6 +126,9 @@ class act_pythia_resid_post_mlp_addn:
             normwmean_actemb_ppma["layer 2"].append(t.mean(t.norm(output2mean_ppma, dim = -1), dim = 0))
             normwmean_actemb_ppma["layer 3"].append(t.mean(t.norm(output3mean_ppma, dim = -1), dim = 0))
             normwmean_actemb_ppma["layer 4"].append(t.mean(t.norm(output4mean_ppma, dim = -1), dim = 0))
+            
+            del output0_ppma, output1_ppma, output2_ppma, output3_ppma, output4_ppma
+            gc.collect()
             
         return normwmean_actemb_ppma
 
@@ -291,6 +299,12 @@ class grad_pythia_resid_post_mlp_addn:
                 output2_grad_ppma = self.model.gpt_neox.layers[2].output[0].save()
                 output3_grad_ppma = self.model.gpt_neox.layers[3].output[0].save()
                 output4_grad_ppma = self.model.gpt_neox.layers[4].output[0].save()
+            
+            output0_grad_ppma = output0_grad_ppma.detach()
+            output1_grad_ppma = output1_grad_ppma.detach()
+            output2_grad_ppma = output2_grad_ppma.detach()
+            output3_grad_ppma = output3_grad_ppma.detach()
+            output4_grad_ppma = output4_grad_ppma.detach()
                 
             # firstly taking the norm for the batch of 2 and then for the dimension of every token
             output0mean_ppma = output0_grad_ppma - t.mean(output0_grad_ppma, dim = 0, keepdim = True)
