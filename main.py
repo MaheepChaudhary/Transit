@@ -34,8 +34,8 @@ if __name__ == "__main__":
     elif args.model == "torch_pythia":
         model_name = 'EleutherAI/pythia-70m'
         tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-        model.train()
+        model = AutoModelForCausalLM.from_pretrained(model_name).to('cpu')
+        model.eval()
         train_data, val_data = inspect_data(data)
         print();print(model);print()
         with open(f"data/pythia_val_data_b{args.batch_size}.pkl", "rb") as f:

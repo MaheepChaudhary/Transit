@@ -6,7 +6,7 @@ class pythia_grad:
         self.model = model
         self.tokenizer = tokenizer
         self.dataloader = dataloader
-        self.mlp_dict = {
+        self.final_mlp_dict = {
             "layers[5].mlp": [],
             "layers[4].mlp": [],
             "layers[3].mlp": [],
@@ -14,7 +14,7 @@ class pythia_grad:
             "layers[1].mlp": [],
             "layers[0].mlp": [],
         }
-        self.attn_dict = {
+        self.final_attn_dict = {
             "layers[5].attention": [],
             "layers[4].attention": [],
             "layers[3].attention": [],
@@ -22,7 +22,7 @@ class pythia_grad:
             "layers[1].attention": [],
             "layers[0].attention": []
         }
-        self.resid_dict = {
+        self.final_resid_dict = {
             "resid[5]": [],
             "resid[4]": [],
             "resid[3]": [],
@@ -40,15 +40,45 @@ class pythia_grad:
         return hook
     
     def forward(self):
+        
+        current_mlp_grad = {key: [] for key in self.final_mlp_dict.keys()}
+        current_attn_grad = {key: [] for key in self.final_attn_dict.keys()}
+        current_resid_grad = {key: [] for key in self.final_resid_dict.keys()}
+        
         for j, batch in enumerate(tqdm(self.dataloader)):
+            
+            mlp_dict = {
+            "layers[5].mlp": [],
+            "layers[4].mlp": [],
+            "layers[3].mlp": [],
+            "layers[2].mlp": [],
+            "layers[1].mlp": [],
+            "layers[0].mlp": [],
+            }
+            attn_dict = {
+                "layers[5].attention": [],
+                "layers[4].attention": [],
+                "layers[3].attention": [],
+                "layers[2].attention": [],
+                "layers[1].attention": [],
+                "layers[0].attention": []
+            }
+            resid_dict = {
+                "resid[5]": [],
+                "resid[4]": [],
+                "resid[3]": [],
+                "resid[2]": [],
+                "resid[1]": [],
+                "resid[0]": []
+            }
             # Convert batch to tensor if not already; adjust as necessary
             inputs = {key: t.tensor(val) for key, val in batch.items()}
 
             # Register hooks
             for i, layer in enumerate(self.model.gpt_neox.layers):
-                layer.mlp.register_backward_hook(self.capture_gradients(f"layers[{i}].mlp", self.mlp_dict))
-                layer.attention.register_backward_hook(self.capture_gradients(f"layers[{i}].attention", self.attn_dict))
-            
+                layer.mlp.register_backward_hook(self.capture_gradients(f"layers[{i}].mlp", mlp_dict))
+                layer.attention.register_backward_hook(self.capture_gradients(f"layers[{i}].attention", attn_dict))
+
             outputs = self.model(**inputs)
             logits = outputs.logits
 
@@ -59,54 +89,52 @@ class pythia_grad:
             loss.backward()
 
             # Compute and store gradients
-            current_mlp_grad = {key: [] for key in self.mlp_dict.keys()}
-            current_attn_grad = {key: [] for key in self.attn_dict.keys()}
-            current_resid_grad = {key: [] for key in self.resid_dict.keys()}
+
 
             for i in range(len(self.model.gpt_neox.layers)):
                 # Stack and convert lists of gradients to tensors
-                mlp_grad = t.stack(self.mlp_dict[f"layers[{i}].mlp"])
-                attn_grad = t.stack(self.attn_dict[f"layers[{i}].attention"])
+                mlp_grad = t.stack(mlp_dict[f"layers[{i}].mlp"]).squeeze(0)
+                attn_grad = t.stack(attn_dict[f"layers[{i}].attention"]).squeeze(0)
 
-                print(np.array(mlp_grad).shape)
+                # print(f"MLP grad: {np.array(mlp_grad).shape}")
                 # Compute norms and means separately
                 mlp_grad_mean = t.mean(t.norm(mlp_grad, dim=-1), dim=0)
                 attn_grad_mean = t.mean(t.norm(attn_grad, dim=-1), dim=0)
-                
-                print(np.array(mlp_grad_mean).shape)
+                print(mlp_grad_mean)
+                # print(f"MLP Grad mean: {np.array(mlp_grad_mean).shape}")
                 # Compute residual gradients and their mean
                 resid_grad = mlp_grad + attn_grad
                 resid_grad_mean = t.mean(t.norm(resid_grad, dim=-1), dim=0)
 
-                print(np.array(resid_grad).shape)
+                # print(f"Resid Grad: {np.array(resid_grad_mean).shape}")
+                print()
                 # Store gradients in the current batch storage
                 current_mlp_grad[f"layers[{i}].mlp"].append(mlp_grad_mean)
                 current_attn_grad[f"layers[{i}].attention"].append(attn_grad_mean)
                 current_resid_grad[f"resid[{i}]"].append(resid_grad_mean)
                 
-            if j == 10:
+            if j == 5:
                 break
             
         # Update dictionaries with the mean of gradients over batches
-        for layer_name in self.mlp_dict.keys():
+        for layer_name in self.final_mlp_dict.keys():
             if current_mlp_grad[layer_name]:
-                self.mlp_dict[layer_name] = np.mean(np.array(current_mlp_grad[layer_name]), axis=0)
+                self.final_mlp_dict[layer_name] = np.mean(np.array(current_mlp_grad[layer_name]), axis=0)
 
-        for layer_name in self.attn_dict.keys():
+        for layer_name in self.final_attn_dict.keys():
             if current_attn_grad[layer_name]:
-                self.attn_dict[layer_name] = np.mean(np.array(current_attn_grad[layer_name]), axis=0)
+                self.final_attn_dict[layer_name] = np.mean(np.array(current_attn_grad[layer_name]), axis=0)
 
-        for layer_name in self.resid_dict.keys():
+        for layer_name in self.final_resid_dict.keys():
             if current_resid_grad[layer_name]:
-                self.resid_dict[layer_name] = np.mean(np.array(current_resid_grad[layer_name]), axis=0)
+                self.final_resid_dict[layer_name] = np.mean(np.array(current_resid_grad[layer_name]), axis=0)
         
 
             
         # Plot the results
-        print(np.array(self.mlp_dict["layers[5].mlp"].shape))
-        self.plotting_grad(self.mlp_dict, "MLP")
-        self.plotting_grad(self.attn_dict, "Attention")
-        self.plotting_grad(self.resid_dict, "Residual")
+        self.plotting_grad(self.final_mlp_dict, "MLP")
+        self.plotting_grad(self.final_attn_dict, "Attention")
+        self.plotting_grad(self.final_resid_dict, "Residual")
 
     def plotting_grad(self, data_dict, name):
         data = np.array([v for k, v in sorted(data_dict.items())])
