@@ -24,7 +24,7 @@ from jaxtyping import Float
 from nnsight import LanguageModel
 from tqdm import tqdm
 # from transformer_lens import ActivationCache, HookedTransformer, utils
-from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer, AutoModelForCausalLM, ythiaTokenizer, PythiaModel
 import gc
 import matplotlib.image as mpimg
 

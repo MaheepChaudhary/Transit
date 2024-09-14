@@ -30,6 +30,12 @@ if __name__ == "__main__":
         model = LanguageModel("EleutherAI/pythia-70m", device_map="cpu")
     elif args.model == "gpt2":
         model = LanguageModel("openai-community/gpt2", device_map = "cpu")
+    elif args.model == "torch_pythia":
+        tokenizer = PythiaTokenizer.from_pretrained('pythia')
+        model = PythiaModel.from_pretrained('pythia')
+        model.train()
+    
+    
     
     train_data, val_data = inspect_data(data)
     print();print(model);print()
