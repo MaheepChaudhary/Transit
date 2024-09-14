@@ -2,6 +2,7 @@ from imports import *
 from models import *
 from dataset import *
 from norm_and_grad import *
+from grad_using_hooks import *
 
 def create_dataloader(tokenized_data, batch_size=2):
     input_ids = torch.tensor([item['input_ids'] for item in tokenized_data])
@@ -31,24 +32,28 @@ if __name__ == "__main__":
     elif args.model == "gpt2":
         model = LanguageModel("openai-community/gpt2", device_map = "cpu")
     elif args.model == "torch_pythia":
-        tokenizer = PythiaTokenizer.from_pretrained('pythia')
-        model = PythiaModel.from_pretrained('pythia')
+        model_name = 'EleutherAI/pythia-70m'
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForCausalLM.from_pretrained(model_name)
         model.train()
-    
-    
-    
-    train_data, val_data = inspect_data(data)
-    print();print(model);print()
-    # Tokenizing the text data
-    try:
-        with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "rb") as f:
+        train_data, val_data = inspect_data(data)
+        print();print(model);print()
+        with open(f"data/pythia_val_data_b{args.batch_size}.pkl", "rb") as f:
             val_dataloader = pickle.load(f)
+    
+    if args.model == "pythia" or args.model == "gpt2":
+        train_data, val_data = inspect_data(data)
+        print();print(model);print()
+        # Tokenizing the text data
+        try:
+            with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "rb") as f:
+                val_dataloader = pickle.load(f)
 
-    except:
-        val_dataloader = process_data(model, train_data, val_data, args.batch_size)
-        
-        with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "wb") as f:
-            pickle.dump(val_dataloader, f)
+        except:
+            val_dataloader = process_data(model, train_data, val_data, args.batch_size)
+            
+            with open(f"data/{args.model}_val_data_b{args.batch_size}.pkl", "wb") as f:
+                pickle.dump(val_dataloader, f)
     
     
     
@@ -182,7 +187,11 @@ if __name__ == "__main__":
             
             grad_class_attention.grad_norm()
     
-
+    elif args.model == "torch_pythia":
+        pythia_gradients = pythia_grad(model, tokenizer, dataloader = val_dataloader)
+        gradients = pythia_gradients.forward()
+        print(np.array(gradients["h[5].attention"]).shape)
+        
     
     # normed_grad = gradients_norm(model, val_dataloader, args.title, name)
     # normed_grad.norm()
