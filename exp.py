@@ -1,6 +1,49 @@
 from imports import *
 from dataset import inspect_data
 
+from transformers import GPT2Tokenizer, GPT2Model
+
+# Load GPT-2 model and tokenizer
+tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
+model = GPT2Model.from_pretrained('gpt2')
+print(model)
+
+# Input text
+input_text = "Hello, how are you?"
+inputs = tokenizer(input_text, return_tensors="pt")
+
+# Forward pass
+outputs = model(**inputs)
+last_hidden_states = outputs.last_hidden_state  # This is the output of the GPT-2 model
+
+# Suppose we want the gradient of the sum of the last hidden states (or any other component)
+loss = last_hidden_states.sum()
+
+# Backward pass to compute the gradients
+loss.backward()
+
+# Now, we can access the gradients
+grad_input_ids = inputs['input_ids'].grad  # Gradient wrt input tokens
+
+# So i need the gradient of the following parameters of the model:
+'''
+* model.h.0.mlp.c_proj.weight
+* model.h.0.attn.c_proj.weight
+* But there is no variable that can denote the additiona of the mlp + resid to get their gradient. 
+'''
+
+first_layer_gradients = model.h[0].mlp.c_fc.weight.grad
+print(first_layer_gradients)
+    # print(param)
+# print(grad_input_ids)
+# If you want gradients of specific layers or model parameters, you can access them:
+# for name, param in model.named_parameters():
+#     if param.requires_grad and param.grad is not None:
+#         print(f"Gradient for {name}: {param.grad}")
+
+
+
+'''
 from nnsight import LanguageModel
 
 model = LanguageModel("EleutherAI/pythia-410m", device_map="cpu")
@@ -32,7 +75,7 @@ print(output0)
 print(output0_mlp)
 print(output0_attn)
 
-'''
+
 
 
 with model.trace("I will be out for a ") as tracer:
