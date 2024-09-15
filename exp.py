@@ -31,12 +31,23 @@ loss.backward()  # Backpropagate to calculate gradients
 # Extract the gradients for mlp.dense_4h_to_h and layers.0.attention.dense
 
 # Gradient for mlp.dense_4h_to_h
-mlp_dense_grad = model.gpt_neox.layers[0].mlp.dense_4h_to_h.weight.grad
-print("Gradient of mlp.dense_4h_to_h:", mlp_dense_grad)
+mlp_grad_dict = {}
+attn_grad_dict = {}
 
-# Gradient for layers.0.attention.dense
-attention_dense_grad = model.gpt_neox.layers[0].attention.dense.weight.grad
-print("Gradient of layers.0.attention.dense:", attention_dense_grad)
+for layer in range(6):
+    mlp_grad_dict[f" layer {layer}"] = model.gpt_neox.layers[layer].mlp.dense_4h_to_h.weight.grad
 
-print(mlp_dense_grad)
-print(attention_dense_grad)
+for layer_ in range(6):
+    attn_grad_dict[f"layer {layer}"] = model.gpt_neox.layers[layer].attention.dense.weight.grad
+
+
+for k, v in mlp_grad_dict.items():
+    print(k,v)
+    print()
+
+print()
+
+for key, value in attn_grad_dict.items():
+    print(key,value)
+    print()
+
