@@ -89,7 +89,7 @@ if __name__ == "__main__":
             batch['text'],
             padding='max_length',  # Pad to max length if necessary
             truncation=True,       # Truncate if input is longer than the model's max length
-            max_length=32,         # Set max length for tokenized input
+            max_length=128,         # Set max length for tokenized input
             return_tensors='pt'    # Return PyTorch tensors (can also use 'tf' for TensorFlow)
         )
 
