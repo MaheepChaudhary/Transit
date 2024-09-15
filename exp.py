@@ -17,6 +17,8 @@ model.to(device)
 # Set the model to training mode to ensure gradients are tracked
 model.train()
 
+print(model)
+
 # Define an input sequence
 input_text = "Sample input text for gradient extraction."
 inputs = tokenizer(input_text, return_tensors="pt").to(device)
@@ -48,7 +50,7 @@ class grad:
             "layer 5" : [],
         }
 
-        for batch in tqmd(self.dataloader):
+        for index, batch in enumerate(tqdm(self.dataloader)):
             # Perform a forward pass to obtain the model output
             outputs = model(**batch)
 
@@ -67,36 +69,40 @@ class grad:
 
             for layer_ in range(6):
                 attn_grad_dict[f"layer {layer_}"] = model.gpt_neox.layers[layer_].attention.dense.weight.grad
-
-
-            for k, v in mlp_grad_dict.items():
-                print(k,v)
-                print()
-
-            print()
-
-            for key, value in attn_grad_dict.items():
-                print(key,value)
-                print()
-
+            
+            print(np.array(mlp_grad_dict["layer 0"]).shape)
+            print(np.array(attn_grad_dict["layer 0"]).shape)
+            
             for layer in range(6):
-                data_attn[f"layer {layer}"].append(t.mean(t.norm(attn_grad_dict[f"layer {layer}"], dim = -1), dim = 0))
+                data_attn[f"layer {layer}"].append(t.norm(attn_grad_dict[f"layer {layer}"], dim = -1))
                 
             for layer in range(6):
-                data_mlp[f"layer {layer}"].append(t.mean(t.norm(mlp_grad_dict[f"layer {layer}"], dim = -1), dim = 0))
+                data_mlp[f"layer {layer}"].append(t.norm(mlp_grad_dict[f"layer {layer}"], dim = -1))
+            
+            print(np.array(data_attn["layer 0"]).shape)
+            
+            if index == 10:
+                break
 
         final_data_mlp = np.array([np.mean(np.array(data_mlp["layer 0"]), axis = 0),
-                                   np.mean(np.array(data_mlp["layer 1"]), axis = 0),
-                                   np.mean(np.array(data_mlp["layer 2"]), axis = 0),
-                                   np.mean(np.array(data_mlp["layer 3"]), axis = 0),
-                                   np.mean(np.array(data_mlp["layer 4"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 1"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 2"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 3"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 4"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 5"]), axis = 0)
         ])
+        print()
+        print(final_data_mlp)
+        print()
         final_data_attn = np.array([np.mean(np.array(data_attn["layer 0"]), axis = 0),
-                                   np.mean(np.array(data_attn["layer 1"]), axis = 0),
-                                   np.mean(np.array(data_attn["layer 2"]), axis = 0),
-                                   np.mean(np.array(data_attn["layer 3"]), axis = 0),
-                                   np.mean(np.array(data_attn["layer 4"]), axis = 0),
+                                    np.mean(np.array(data_attn["layer 1"]), axis = 0),
+                                    np.mean(np.array(data_attn["layer 2"]), axis = 0),
+                                    np.mean(np.array(data_attn["layer 3"]), axis = 0),
+                                    np.mean(np.array(data_attn["layer 4"]), axis = 0),
+                                    np.mean(np.array(data_mlp["layer 5"]), axis = 0)
         ])
+        print()
+        print(final_data_attn)
         
         with open("mdata/pythia_mlp_gradient.pkl", "wb") as f:
             pickle.dump(final_data_mlp, f)
