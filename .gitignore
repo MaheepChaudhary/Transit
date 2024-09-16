@@ -6,3 +6,8 @@ data/*
 mdata/activation_embeds_post_mlp_addn_resid.pkl
 __pycache__/norm_and_grad.cpython-311.pyc
 __pycache__/grad_using_hooks.cpython-311.pyc
+mdata/pythia_attn_gradient.pkl
+mdata/pythia_mlp_gradient.pkl
+mdata/pythia_attn_gradient.pkl
+mdata/pythia_attn_gradient.pkl
+mdata/pythia_mlp_gradient.pkl
