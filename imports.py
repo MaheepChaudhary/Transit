@@ -27,6 +27,7 @@ from tqdm import tqdm
 from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer, AutoModelForCausalLM, AutoModel
 import gc
 import matplotlib.image as mpimg
+import seaborn as sns
 
 import wandb
 # from e2e_sae import SAETransformer
