@@ -5,6 +5,8 @@ from dataset import inspect_data
 
 if __name__ == "__main__":
     
+    batch_size = 16
+    pythia_layers = 6
     
     train_data, val_data = inspect_data(data)
     with open(f"data/pythia_val_data_b16.pkl", "rb") as f:
@@ -17,46 +19,10 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
-    # Input text
-    input_text = 'One day, a little girl named Lily found a needle in her room. She knew it was difficult to play with it because it was sharp. Lily wanted to share the needle with her mom, so she could sew a button on her shirt. Lily went to her mom and said, "Mom, I found this needle. Can you share it with me and sew my shirt?" Her mom smiled and said, "Yes, Lily, we can share the needle and fix your shirt." Together, they shared the needle and sewed the button on Lilys shirt. It was not difficult for them because they were sharing and helping each other. After they finished, Lily thanked her mom for sharing the needle and fixing her shirt. They both felt happy because they had shared and worked together.'
-    # inputs = tokenizer(input_text, return_tensors="pt")
-    
-    # mlp_gradients = None
-    # attn_gradients = None
-
     model.train()
     tokenizer.pad_token = tokenizer.eos_token
     
-    '''
-    inputs_text = tokenizer(
-    input_text,
-    padding='max_length',  # Pad to max length if necessary
-    truncation=True,       # Truncate if input is longer than the model's max length
-    max_length=32,         # Set max length for tokenized input
-    return_tensors='pt'    # Return PyTorch tensors (can also use 'tf' for TensorFlow)
-    )
 
-    def capture_mlp_output(module, input, output):
-        global mlp_gradients
-        mlp_gradients = output[0]  # Capture the output for later use
-
-    def capture_attn_output(module, input, output):
-        global attn_gradients
-        attn_gradients = output[0] 
-        
-    # model.gpt_neox.layers[0].mlp.register_full_backward_hook(capture_mlp_output)
-    # model.gpt_neox.layers[0].attention.register_full_backward_hook(capture_attn_output)
-    model.transformer.h[0].mlp.register_full_backward_hook(capture_mlp_output)  
-    model.transformer.h[0].attn.register_full_backward_hook(capture_attn_output)
-
-    outputs = model(**inputs_text)
-    logits = outputs.logits
-    loss = logits.sum()
-    loss.backward()
-
-    print(mlp_gradients)
-    print(attn_gradients)
-    '''
     all_data_mlp = {
         "Layer 0": [],
         "Layer 1": [],
@@ -83,15 +49,7 @@ if __name__ == "__main__":
     
 
     
-    for i, batch in enumerate(tqdm(val_data)):
-
-        inputs = tokenizer(
-            batch['text'],
-            padding='max_length',  # Pad to max length if necessary
-            truncation=True,       # Truncate if input is longer than the model's max length
-            max_length=128,         # Set max length for tokenized input
-            return_tensors='pt'    # Return PyTorch tensors (can also use 'tf' for TensorFlow)
-        )
+    for index, batch in enumerate(tqdm(val_dataloader)):
 
         mlp_gradients = None
         attn_gradients = None
@@ -104,122 +62,39 @@ if __name__ == "__main__":
         mlp_gradients4 = None
         attn_gradients4 = None
 
-        def capture_mlp_output(module, input, output):
-            global mlp_gradients
-            mlp_gradients = output[0]  # Capture the output for later use
-
-        def capture_attn_output(module, input, output):
-            global attn_gradients
-            attn_gradients = output[0]  # Capture the output for later use
-            
-        def capture_mlp_output1(module, input, output):
-            global mlp_gradients1
-            mlp_gradients1 = output[0]  # Capture the output for later use
-
-        def capture_attn_output1(module, input, output):
-            global attn_gradients1
-            attn_gradients1 = output[0]  # Capture the output for later use
-
-        def capture_mlp_output2(module, input, output):
-            global mlp_gradients2
-            mlp_gradients2 = output[0]  # Capture the output for later use
-
-        def capture_attn_output2(module, input, output):
-            global attn_gradients2
-            attn_gradients2 = output[0]  # Capture the output for later use
-
-
-        def capture_mlp_output3(module, input, output):
-            global mlp_gradients3
-            mlp_gradients3 = output[0]  # Capture the output for later use
-
-        def capture_attn_output3(module, input, output):
-            global attn_gradients3
-            attn_gradients3 = output[0]  # Capture the output for later use
-            
-            
-        def capture_mlp_output4(module, input, output):
-            global mlp_gradients4
-            mlp_gradients4 = output[0]  # Capture the output for later use
-
-        def capture_attn_output4(module, input, output):
-            global attn_gradients4
-            attn_gradients4 = output[0]  # Capture the output for later use
-
-
-        model.gpt_neox.layers[0].mlp.register_backward_hook(capture_mlp_output)
-        model.gpt_neox.layers[0].attention.register_backward_hook(capture_attn_output)
+        inputs = {key: t.tensor(val) for key, val in batch.items()}
         
-        model.gpt_neox.layers[1].mlp.register_backward_hook(capture_mlp_output1)
-        model.gpt_neox.layers[1].attention.register_backward_hook(capture_attn_output1)
-        
-        model.gpt_neox.layers[2].mlp.register_backward_hook(capture_mlp_output2)
-        model.gpt_neox.layers[2].attention.register_backward_hook(capture_attn_output2)
-        
-        model.gpt_neox.layers[3].mlp.register_backward_hook(capture_mlp_output3)
-        model.gpt_neox.layers[3].attention.register_backward_hook(capture_attn_output3)
-        
-        model.gpt_neox.layers[4].mlp.register_backward_hook(capture_mlp_output4)
-        model.gpt_neox.layers[4].attention.register_backward_hook(capture_attn_output4)
-        
-
         outputs = model(**inputs)
         logits = outputs.logits  
-        loss = logits.sum()
-        loss.backward()
+        # loss = logits.sum()
+        print(logits.shape)
+        
+        final_token_grads = []
+        
+        for sent in range(batch_size):
+            token_gradients = []
+            for token_idx in range(128):
 
-        # print(mlp_gradients)
-        # print(attn_gradients)
+                model.zero_grad()
+                
+                token_loss = logits[sent, token_idx, :].sum()
+                token_loss.backward(retain_graph = True)
+                
+                gradients = []
+                for layer in range(pythia_layers):
+                    layer = model.gpt_neox.layers[layer].mlp.dense_4h_to_h  
+                    param_grad = layer.weight.grad.clone().view(-1)  
+                    gradients.append(param_grad.unsqueeze(0))  
 
-        # Combine gradients if needed
-        combined_grad = mlp_gradients + attn_gradients
-        combined_grad1 = mlp_gradients1 + attn_gradients1
-        combined_grad2 = mlp_gradients2 + attn_gradients2
-        combined_grad3 = mlp_gradients3 + attn_gradients3
-        combined_grad4 = mlp_gradients4 + attn_gradients4
+                # Convert gradients to a tensor and add to the list
+                token_gradients.append(torch.cat(gradients, dim=0)) 
+                t_token_gradients = t.stack(token_gradients)
+            final_token_grads.append([token_gradients.norm(dim = 2)]) # Shape: (# of sentences, seq_len, layer_count)
+            print(np.array(final_token_grads).shape)
+        if index == 5:
+            break
         
-        mean_norm_mlp_grad = t.norm(mlp_gradients.squeeze(0), dim = -1)
-        mean_norm_mlp_grad1 = t.norm(mlp_gradients1.squeeze(0), dim = -1)
-        mean_norm_mlp_grad2 = t.norm(mlp_gradients2.squeeze(0), dim = -1)
-        mean_norm_mlp_grad3 = t.norm(mlp_gradients3.squeeze(0), dim = -1)
-        mean_norm_mlp_grad4 = t.norm(mlp_gradients4.squeeze(0), dim = -1)
-        
-        
-        mean_norm_attn_grad = t.norm(attn_gradients.squeeze(0), dim = -1)
-        mean_norm_attn_grad1 = t.norm(attn_gradients1.squeeze(0), dim = -1)
-        mean_norm_attn_grad2 = t.norm(attn_gradients2.squeeze(0), dim = -1)
-        mean_norm_attn_grad3 = t.norm(attn_gradients3.squeeze(0), dim = -1)
-        mean_norm_attn_grad4 = t.norm(attn_gradients4.squeeze(0), dim = -1)
-
-
-        mean_norm_combined_grad = t.norm(combined_grad.squeeze(0), dim = -1)
-        mean_norm_combined_grad1 = t.norm(combined_grad1.squeeze(0), dim = -1)
-        mean_norm_combined_grad2 = t.norm(combined_grad2.squeeze(0), dim = -1)
-        mean_norm_combined_grad3 = t.norm(combined_grad3.squeeze(0), dim = -1)
-        mean_norm_combined_grad4 = t.norm(combined_grad4.squeeze(0), dim = -1)
-        
-        
-        all_data_mlp["Layer 0"].append(mean_norm_mlp_grad)
-        all_data_mlp["Layer 1"].append(mean_norm_mlp_grad1)
-        all_data_mlp["Layer 2"].append(mean_norm_mlp_grad2)
-        all_data_mlp["Layer 3"].append(mean_norm_mlp_grad3)
-        all_data_mlp["Layer 4"].append(mean_norm_mlp_grad4)
-        
-        all_data_attn["Layer 0"].append(mean_norm_attn_grad)
-        all_data_attn["Layer 1"].append(mean_norm_attn_grad1)
-        all_data_attn["Layer 2"].append(mean_norm_attn_grad2)
-        all_data_attn["Layer 3"].append(mean_norm_attn_grad3)
-        all_data_attn["Layer 4"].append(mean_norm_attn_grad4)
-        
-        all_data_resid["Layer 0"].append(mean_norm_combined_grad)
-        all_data_resid["Layer 1"].append(mean_norm_combined_grad1)
-        all_data_resid["Layer 2"].append(mean_norm_combined_grad2)
-        all_data_resid["Layer 3"].append(mean_norm_combined_grad3)
-        all_data_resid["Layer 4"].append(mean_norm_combined_grad4)
-        
-        # if i == 1:
-        #     break
-
+    '''
     with open("data/all_data_mlp.pkl", "wb") as f:
         pickle.dump(all_data_mlp, f)
         
@@ -328,6 +203,8 @@ if __name__ == "__main__":
         
     # grads(val_data, model, tokenizer)
     plot()
+    '''
+
 
     '''
     from nnsight import LanguageModel
