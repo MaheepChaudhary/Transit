@@ -109,26 +109,28 @@ if __name__ == "__main__":
                     param_grad = layer.weight.grad.clone().view(-1) # Shape: (params,)
                     layer_for_each_token[f"layer {layer_idx}"].append(t.norm(param_grad).cpu())  # Shape: (#oftoken, params)
             
-            print(np.array(layer_for_each_token["layer 0"]).shape)
+            # print(np.array(layer_for_each_token["layer 0"]).shape)
             
             for layer in range(pythia_layers):
                 sent_per_layer[f"layer {layer}"].append(layer_for_each_token[f"layer {layer}"])
 
-            print(np.array(sent_per_layer["layer 0"]).shape)
+            # print(np.array(sent_per_layer["layer 0"]).shape)
         
         
-        if index == 1:
-            break
+        # if index == 1:
+        #     break
     
     data = []
     
     for layer_idx in range(6):
         data.append(np.log(np.mean(np.array(sent_per_layer[f"layer {layer_idx}"]), axis = 0)))
     
+    with open("pythia_full_data_single_token_grad.pkl", "wb") as f:
+        pickle.dump(data, f)
 
     # Visualize the gradients using a heatmap
     plt.figure(figsize=(15, 6))
-    sns.heatmap(data.cpu().numpy().T, cmap='viridis', cbar=True, yticklabels=range(6), xticklabels=range(128))
+    sns.heatmap(data, cmap='viridis', cbar=True, yticklabels=range(6), xticklabels=range(128))
     plt.xlabel('Token Index')
     plt.ylabel('Layer Index')
     plt.title('Token-wise Gradient Norms Across Layers for mlp.dense_4h_to_h on log scale')
