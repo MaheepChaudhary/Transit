@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # Load GPT-2 model and tokenizer
     model_name = 'EleutherAI/pythia-70m'
     # model_name = "openai-community/gpt2"
-    model = AutoModelForCausalLM.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name, device_map = "mps")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 
@@ -47,7 +47,18 @@ if __name__ == "__main__":
         "Layer 4": [],
     }
     
-
+    device = t.device("mps")
+    
+    
+    sent_per_layer = {
+        "layer 0": [],
+        "layer 1": [],
+        "layer 2": [],
+        "layer 3": [],
+        "layer 4": [],
+        "layer 5": []
+        }
+    
     
     for index, batch in enumerate(tqdm(val_dataloader)):
 
@@ -64,7 +75,7 @@ if __name__ == "__main__":
         
         model.zero_grad()
 
-        inputs = {key: t.tensor(val) for key, val in batch.items()}
+        inputs = {key: t.tensor(val).to(device) for key, val in batch.items()}
         
         outputs = model(**inputs)
         logits = outputs.logits  
@@ -72,16 +83,6 @@ if __name__ == "__main__":
         print(logits.shape)
         
         final_token_grads = []
-        
-        sent_per_layer = {
-            "layer 0": [],
-            "layer 1": [],
-            "layer 2": [],
-            "layer 3": [],
-            "layer 4": [],
-            "layer 5": []
-            }
-        
         
         for sent in range(batch_size):
 
@@ -106,18 +107,33 @@ if __name__ == "__main__":
                 for layer_idx in range(pythia_layers):
                     layer = model.gpt_neox.layers[layer_idx].mlp.dense_4h_to_h  
                     param_grad = layer.weight.grad.clone().view(-1) # Shape: (params,)
-                    layer_for_each_token[f"layer {layer_idx}"].append(t.norm(param_grad))  # Shape: (#oftoken, params)
+                    layer_for_each_token[f"layer {layer_idx}"].append(t.norm(param_grad).cpu())  # Shape: (#oftoken, params)
             
-            print(layer_for_each_token["layer 0"].shape)
+            print(np.array(layer_for_each_token["layer 0"]).shape)
             
             for layer in range(pythia_layers):
-                sent_per_layer[f"layer{layer}"].append(layer_for_each_token[f"layer {layer}"])
+                sent_per_layer[f"layer {layer}"].append(layer_for_each_token[f"layer {layer}"])
 
-            print(sent_per_layer["layer 0"].shape)
+            print(np.array(sent_per_layer["layer 0"]).shape)
         
         
-        if index == 5:
+        if index == 1:
             break
+    
+    data = []
+    
+    for layer_idx in range(6):
+        data.append(np.log(np.mean(np.array(sent_per_layer[f"layer {layer_idx}"]), axis = 0)))
+    
+
+    # Visualize the gradients using a heatmap
+    plt.figure(figsize=(15, 6))
+    sns.heatmap(data.cpu().numpy().T, cmap='viridis', cbar=True, yticklabels=range(6), xticklabels=range(128))
+    plt.xlabel('Token Index')
+    plt.ylabel('Layer Index')
+    plt.title('Token-wise Gradient Norms Across Layers for mlp.dense_4h_to_h on log scale')
+    plt.show()
+    plt.close
         
     '''
     with open("data/all_data_mlp.pkl", "wb") as f:
