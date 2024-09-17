@@ -61,6 +61,8 @@ if __name__ == "__main__":
         attn_gradients3 = None
         mlp_gradients4 = None
         attn_gradients4 = None
+        
+        model.zero_grad()
 
         inputs = {key: t.tensor(val) for key, val in batch.items()}
         
@@ -71,26 +73,49 @@ if __name__ == "__main__":
         
         final_token_grads = []
         
+        sent_per_layer = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": []
+            }
+        
+        
         for sent in range(batch_size):
-            token_gradients = []
+
+            layer_for_each_token = {
+                "layer 0": [],
+                "layer 1": [],
+                "layer 2": [],
+                "layer 3": [],
+                "layer 4": [],
+                "layer 5": []
+                }
+            
             for token_idx in range(128):
 
-                model.zero_grad()
+                
                 
                 token_loss = logits[sent, token_idx, :].sum()
                 token_loss.backward(retain_graph = True)
                 
-                gradients = []
-                for layer in range(pythia_layers):
-                    layer = model.gpt_neox.layers[layer].mlp.dense_4h_to_h  
-                    param_grad = layer.weight.grad.clone().view(-1)  
-                    gradients.append(param_grad.unsqueeze(0))  
 
-                # Convert gradients to a tensor and add to the list
-                token_gradients.append(torch.cat(gradients, dim=0)) 
-                t_token_gradients = t.stack(token_gradients)
-            final_token_grads.append([token_gradients.norm(dim = 2)]) # Shape: (# of sentences, seq_len, layer_count)
-            print(np.array(final_token_grads).shape)
+                
+                for layer_idx in range(pythia_layers):
+                    layer = model.gpt_neox.layers[layer_idx].mlp.dense_4h_to_h  
+                    param_grad = layer.weight.grad.clone().view(-1) # Shape: (params,)
+                    layer_for_each_token[f"layer {layer_idx}"].append(t.norm(param_grad))  # Shape: (#oftoken, params)
+            
+            print(layer_for_each_token["layer 0"].shape)
+            
+            for layer in range(pythia_layers):
+                sent_per_layer[f"layer{layer}"].append(layer_for_each_token[f"layer {layer}"])
+
+            print(sent_per_layer["layer 0"].shape)
+        
+        
         if index == 5:
             break
         
