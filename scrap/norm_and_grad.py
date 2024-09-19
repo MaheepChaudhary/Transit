@@ -1,4 +1,4 @@
-from imports import *
+from scrap.imports import *
 
 
 class act_pythia_resid_post_mlp_addn:

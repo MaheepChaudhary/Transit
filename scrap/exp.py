@@ -1,4 +1,4 @@
-from imports import *
+from scrap.imports import *
 
 # Load the Pythia model and tokenizer
 model_name = 'EleutherAI/pythia-70m'

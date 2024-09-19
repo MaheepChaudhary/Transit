@@ -1,7 +1,7 @@
 # from huggingface_hub import hf_hub_download
 # from transformer_lens.hook_points import HookedRootModule, HookPoint
 
-from imports import *
+from scrap.imports import *
 
 # torch.autograd.set_detect_anomaly(True)
 DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}
