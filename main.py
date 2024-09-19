@@ -110,6 +110,10 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     dataset_used = args.data
     
+    configuration = config(device = "cuda", model_name = model_name, data_name = dataset_used)
+    data = configuration.data_selection()
+    model = configuration.model_selection()
+    
     
     
     
