@@ -1,4 +1,4 @@
-from scrap.imports import *
+from imports import *
 
 
 def inspect_data(data):

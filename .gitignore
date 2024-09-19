@@ -11,3 +11,5 @@ scrap/mdata/pythia_mlp_gradient.pkl
 scrap/mdata/pythia_attn_gradient.pkl
 scrap/mdata/pythia_attn_gradient.pkl
 scrap/mdata/pythia_mlp_gradient.pkl
+scrap/__pycache__/dataset.cpython-311.pyc
+scrap/__pycache__/imports.cpython-311.pyc

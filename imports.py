@@ -35,4 +35,3 @@ import wandb
 
 from datasets import load_dataset
 
-data = load_dataset("roneneldan/TinyStories")
