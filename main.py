@@ -1,5 +1,7 @@
 from imports import *
 from dataset import *
+from activation import *
+from grad import *
 
 class config:
     
@@ -89,20 +91,13 @@ class config:
 
 if __name__ == "__main__":
     
-    #TODO: 
-    '''
-    1. Write the code to setup Pythia. 
-    2. Setup the code to load all the datasets. 
-    3. Write the code to get the activations and save it in the figure. 
-    4. Write the code to get the activations and save it in the figure. 
-    5. Write the code to run the code for all the selected models. 
-    '''
     
     parser = argparse.ArgumentParser()
     
     parser.add_argument("--model_name", type = str, default="Pythia70m")
     parser.add_argument("--batch_size", type=int, default="16")
     parser.add_argument("--data", type = str, default = "tinystories")
+    parser.add_argument("--device", type = str, default = "cuda")
     
     args = parser.parse_args()
     
@@ -114,9 +109,36 @@ if __name__ == "__main__":
     data = configuration.data_selection()
     model = configuration.model_selection()
     
+    '''
+    Computing the Attention Norms
+    '''
     
     
+    activation_resid= act_pythia_resid_post_mlp_addn(data, model, model_name, dataset_used)
+    activation_resid.norm()
+    activation_resid.act_normwmean_ppma()
     
     
+    activation_mlp = act_pythia_mlp(data, model, model_name, dataset_used)
+    activation_mlp.norm()
+    activation_mlp.act_normwmean_mlp()
+    
+    
+    activation_attn = act_pythia_attention(data, model, model_name, dataset_used)
+    activation_attn.norm()
+    activation_attn.act_normwmean_attn()
+    
+    
+    '''
+    Computing the attention gradients
+    '''
+    
+    
+    grad_mlp = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
+    grad_mlp.forward()
+    
+    
+    grad_attn = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
+    grad_attn.forward()
     
     
