@@ -36,19 +36,22 @@ class config:
         if self.data_name == "tinystories":
             pre_data = load_dataset("roneneldan/TinyStories")
             data = pre_data["validation"]['text'] # as we are experimenting on the validation dataset. 
-            self.process_data_selection(data)
+            final_data = self.process_data_selection(data)
         
         elif self.data_name == "alpaca":
             pre_data_alpaca = load_dataset("tatsu-lab/alpaca")
             data = pre_data_alpaca["train"]["instruction"]
-            self.process_data_selection(data)
+            final_data = self.process_data_selection(data)
         
         elif self.data_name == "summarisation":
             data_summarisation = load_dataset("YashaP/Summarisation_dataset")
             data = data_summarisation["train"]["input"]
-            self.process_data_selection(data)
+            final_data = self.process_data_selection(data)
+        
+        return final_data
     
     def process_data_selection(self, data):
+        
         '''
         The purpose of this function is to select 500 samples from each dataset of their average length
         - TinyStories: 177
@@ -56,7 +59,33 @@ class config:
         - Summarisation: 1100
         '''
         
-
+        if self.data_name == "tinystories":
+            shuffled_text = random.sample(data['validation']['text'], len(data['validation']['text']))
+            new_data = []
+            for sent in shuffled_text:
+                if len(sent) == 177:
+                    new_data.append(sent)
+                if len(new_data) == 500:
+                    break
+                
+        elif self.data_name == "alpaca":
+            shuffled_text = random.sample(data["train"]["instruction"])
+            new_data = []
+            for sent in shuffled_text:
+                if len(sent) == 50:
+                    new_data.append(sent)
+                if len(new_data) == 500:
+                    break
+        elif self.data_name == "summarisation":
+            shuffled_text = random.sample(data['train']['input'])
+            new_data = []
+            for sent in shuffled_text:
+                if len(sent) == 1100:
+                    new_data.append(sent)
+                if len(new_data) == 500:
+                    break
+        
+        return new_data
 
 if __name__ == "__main__":
     
