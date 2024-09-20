@@ -46,7 +46,7 @@ class config:
             final_data = self.process_data_selection(data)
         
         elif self.data_name == "summarisation":
-            data_summarisation = load_dataset("YashaP/Summarisation_dataset")
+            data_summarisation = load_dataset("Lots-of-LoRAs/task298_storycloze_correct_end_classification", name="default")
             new_data = data_summarisation["train"]["input"]
             final_data = self.process_data_selection(new_data)
         
@@ -74,7 +74,7 @@ class config:
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent.split()) == 50:
+                if len(sent.split()) == 7:
                     new_data.append(sent)
                 if len(new_data) == 400:
                     break
@@ -82,10 +82,12 @@ class config:
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent.split()) > 1000 and len(sent.split()) < 1500:
+                if len(sent.split()) > 310 or len(sent.split()) < 320:
                     new_data.append(sent)
                 if len(new_data) == 400:
                     break
+        
+        assert len(new_data) == 400
         
         return new_data
 
