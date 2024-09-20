@@ -65,17 +65,16 @@ class config:
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent) == 143 or len(sent) == 142:
+                if len(sent.split()) == 143 or len(sent.split()) == 142:
                     new_data.append(sent)
                 if len(new_data) == 400:
                     break
-            print(new_data)
                 
         elif self.data_name == "alpaca":
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent) == 50:
+                if len(sent.split()) == 50:
                     new_data.append(sent)
                 if len(new_data) == 400:
                     break
@@ -83,7 +82,7 @@ class config:
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent) > 1000 and len(sent) < 1500:
+                if len(sent.split()) > 1000 and len(sent.split()) < 1500:
                     new_data.append(sent)
                 if len(new_data) == 400:
                     break
@@ -108,7 +107,6 @@ if __name__ == "__main__":
     
     configuration = config(device = args.device, model_name = model_name, data_name = dataset_used)
     data = configuration.data_selection()
-    print(data)
     model = configuration.model_selection()
     
     '''
