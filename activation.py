@@ -83,6 +83,11 @@ class act_pythia_resid_post_mlp_addn:
             # mean_acts["last layer"]
             ])
         
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_resid.png")
 
     def act_normwmean_fn_ppma(self):
@@ -154,6 +159,11 @@ class act_pythia_resid_post_mlp_addn:
             np.log(np.array(normwmean_actemb_ppma["layer 3"])),
             np.log(np.array(normwmean_actemb_ppma["layer 4"])),
             ])
+        
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
 
         self.plotting(data=actlistmean_ppma, name = f"figures/{self.dataset_name}/{self.model_name}/activation_resid_wmean.png")
 
@@ -259,6 +269,11 @@ class act_pythia_mlp:
             # mean_acts["last layer"]
             ])
         
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_mlp.png")
 
 
@@ -329,7 +344,10 @@ class act_pythia_mlp:
             np.log(np.array(normwmean_actemb_mlp["layer 3"])),
             np.log(np.array(normwmean_actemb_mlp["layer 4"])),
             ])
-
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
         self.plotting(data=actlistmean_mlp, name = f"figures/{self.dataset_name}/{self.model_name}/activation_mlp_wmean.png")
 
 
@@ -436,6 +454,11 @@ class act_pythia_attention:
             # mean_acts["last layer"]
             ])
         
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_attn.png")
 
     def act_normwmean_fn_attn(self):
@@ -508,7 +531,10 @@ class act_pythia_attention:
             np.log(np.array(normwmean_actemb_attn["layer 3"])),
             np.log(np.array(normwmean_actemb_attn["layer 4"])),
             ])
-
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
         self.plotting(data=actlistmean_attn, name = f"figures/{self.dataset_name}/{self.model_name}/activation_attn_wmean.png")
 
 

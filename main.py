@@ -62,7 +62,7 @@ class config:
         '''
         
         if self.data_name == "tinystories":
-            shuffled_text = random.sample(data['validation']['text'], len(data['validation']['text']))
+            shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
                 if len(sent) == 177:
@@ -71,7 +71,7 @@ class config:
                     break
                 
         elif self.data_name == "alpaca":
-            shuffled_text = random.sample(data["train"]["instruction"])
+            shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
                 if len(sent) == 50:
@@ -79,7 +79,7 @@ class config:
                 if len(new_data) == 500:
                     break
         elif self.data_name == "summarisation":
-            shuffled_text = random.sample(data['train']['input'])
+            shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
                 if len(sent) == 1100:
