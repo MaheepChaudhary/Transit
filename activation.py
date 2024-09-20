@@ -14,6 +14,12 @@ class act_pythia_resid_post_mlp_addn:
         self.model_name = model_name
         self.dataset_name = dataset_name
         
+        if self.dataset_name == "tinystories":
+            self.max_length == 145
+        elif self.dataset_name == "summarisation":
+            self.max_length == 1500
+        elif self.dataset_name == "alpaca":
+            self.max_length == 50
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -27,15 +33,18 @@ class act_pythia_resid_post_mlp_addn:
         }
         
         with t.no_grad():
-            for batch in tqdm(self.data):
-                with self.model.trace(batch) as tracer:
+            for sample in tqdm(self.data):
+                
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+
+                with self.model.trace(inputs) as tracer:
                     output0 = self.model.gpt_neox.layers[0].output[0].save()
                     output1 = self.model.gpt_neox.layers[1].output[0].save()
                     output2 = self.model.gpt_neox.layers[2].output[0].save()
                     output3 = self.model.gpt_neox.layers[3].output[0].save()
                     output4 = self.model.gpt_neox.layers[4].output[0].save()
 
-                print(f"Output0 shape: {np.array(output0).shape}"); print()
+                print(f"Output0 shape: {np.array(output0.detach().cpu()).shape}"); print()
                 
                 # output0.shape -> (batch_size, 128, 2048)
                 activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
@@ -103,9 +112,11 @@ class act_pythia_resid_post_mlp_addn:
             "layer 4": []
         }
         
-        for batch in tqdm(self.data):
+        for sample in tqdm(self.data):
             
-            with self.model.trace(batch) as tracer:
+            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+            
+            with self.model.trace(inputs) as tracer:
                 output0_ppma = self.model.gpt_neox.layers[0].output[0].save()
                 output1_ppma = self.model.gpt_neox.layers[1].output[0].save()
                 output2_ppma = self.model.gpt_neox.layers[2].output[0].save()
@@ -208,6 +219,13 @@ class act_pythia_mlp:
         self.model_name = model_name
         self.dataset_name = dataset_name
         
+        if self.dataset_name == "tinystories":
+            self.max_length == 145
+        elif self.dataset_name == "summarisation":
+            self.max_length == 1500
+        elif self.dataset_name == "alpaca":
+            self.max_length == 50
+        
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -221,9 +239,11 @@ class act_pythia_mlp:
         }
         
         with t.no_grad():
-            for batch in tqdm(self.dataloader):
+            for sample in tqdm(self.data):
                 
-                with self.model.trace(batch["input_ids"]) as tracer:
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+                
+                with self.model.trace(inputs) as tracer:
                     output0 = self.model.gpt_neox.layers[0].mlp.output.save()
                     output1 = self.model.gpt_neox.layers[1].mlp.output.save()
                     output2 = self.model.gpt_neox.layers[2].mlp.output.save()
@@ -290,9 +310,11 @@ class act_pythia_mlp:
             "layer 4": []
         }
         
-        for batch in tqdm(self.dataloader):
+        for sample in tqdm(self.data):
             
-            with self.model.trace(batch["input_ids"]) as tracer:
+            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+                
+            with self.model.trace(inputs) as tracer:
                 output0_mlp = self.model.gpt_neox.layers[0].mlp.output.save()
                 output1_mlp = self.model.gpt_neox.layers[1].mlp.output.save()
                 output2_mlp = self.model.gpt_neox.layers[2].mlp.output.save()
@@ -391,7 +413,13 @@ class act_pythia_attention:
         self.model = model
         self.model_name = model_name
         self.dataset_name = dataset_name
-        
+
+        if self.dataset_name == "tinystories":
+            self.max_length == 145
+        elif self.dataset_name == "summarisation":
+            self.max_length == 1500
+        elif self.dataset_name == "alpaca":
+            self.max_length == 50
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -405,9 +433,11 @@ class act_pythia_attention:
         }
         
         with t.no_grad():
-            for batch in tqdm(self.dataloader):
+            for sample in tqdm(self.data):
                 
-                with self.model.trace(batch["input_ids"]) as tracer:
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+                
+                with self.model.trace(inputs) as tracer:
                     output0 = self.model.gpt_neox.layers[0].attention.output[0].save()
                     output1 = self.model.gpt_neox.layers[1].attention.output[0].save()
                     output2 = self.model.gpt_neox.layers[2].attention.output[0].save()
@@ -474,9 +504,11 @@ class act_pythia_attention:
             "layer 4": []
         }
         
-        for batch in tqdm(self.dataloader):
+        for sample in tqdm(self.data):
             
-            with self.model.trace(batch["input_ids"]) as tracer:
+            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+            
+            with self.model.trace(inputs) as tracer:
                 output0_attn = self.model.gpt_neox.layers[0].attention.output[0].save()
                 output1_attn = self.model.gpt_neox.layers[1].attention.output[0].save()
                 output2_attn = self.model.gpt_neox.layers[2].attention.output[0].save()
@@ -520,7 +552,6 @@ class act_pythia_attention:
         
         wmean_actemb_attn = self.act_normwmean_fn_attn()
         
-        print(np.array(wmean_actemb_attn["layer 0"]).shape)
         normwmean_actemb_attn["layer 0"] = np.mean(np.array(wmean_actemb_attn["layer 0"]), axis=0)
         normwmean_actemb_attn["layer 1"] = np.mean(np.array(wmean_actemb_attn["layer 1"]), axis=0)
         normwmean_actemb_attn["layer 2"] = np.mean(np.array(wmean_actemb_attn["layer 2"]), axis=0)
