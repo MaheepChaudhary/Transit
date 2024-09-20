@@ -13,13 +13,14 @@ class act_pythia_resid_post_mlp_addn:
         self.model = model
         self.model_name = model_name
         self.dataset_name = dataset_name
+        self.tokenizer = self.model.tokenizer
         
         if self.dataset_name == "tinystories":
-            self.max_length == 145
+            self.max_length = 145
         elif self.dataset_name == "summarisation":
-            self.max_length == 1500
+            self.max_length = 1500
         elif self.dataset_name == "alpaca":
-            self.max_length == 50
+            self.max_length = 50
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -43,8 +44,6 @@ class act_pythia_resid_post_mlp_addn:
                     output2 = self.model.gpt_neox.layers[2].output[0].save()
                     output3 = self.model.gpt_neox.layers[3].output[0].save()
                     output4 = self.model.gpt_neox.layers[4].output[0].save()
-
-                print(f"Output0 shape: {np.array(output0.detach().cpu()).shape}"); print()
                 
                 # output0.shape -> (batch_size, 128, 2048)
                 activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
@@ -72,7 +71,6 @@ class act_pythia_resid_post_mlp_addn:
             "layer 4": []
         }
         
-        print(f"Shape of Activation Embeds: {np.array(activation_embeds['layer 0']).shape}");print()
         
         norm_actemb["layer 0"] = np.mean(activation_embeds["layer 0"], axis=0)
         norm_actemb["layer 1"] = np.mean(activation_embeds["layer 1"], axis=0)
@@ -82,7 +80,6 @@ class act_pythia_resid_post_mlp_addn:
         
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
-        print(f"Shape of Norm Actemb: {np.array(norm_actemb['layer 0']).shape}");print()
         
         actlist = np.array([
             np.log(np.array(norm_actemb["layer 0"])),
@@ -93,7 +90,6 @@ class act_pythia_resid_post_mlp_addn:
             # mean_acts["last layer"]
             ])
         
-        print(f"Shape of the activation list: {actlist.shape}"); print()
         
         try:
             os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
