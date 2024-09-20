@@ -47,8 +47,8 @@ class config:
         
         elif self.data_name == "summarisation":
             data_summarisation = load_dataset("YashaP/Summarisation_dataset")
-            data = data_summarisation["train"]["input"]
-            final_data = self.process_data_selection(data)
+            new_data = data_summarisation["train"]["input"]
+            final_data = self.process_data_selection(new_data)
         
         return final_data
     
@@ -65,10 +65,11 @@ class config:
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent) == 177:
+                if len(sent) == 143 or len(sent) == 142:
                     new_data.append(sent)
-                if len(new_data) == 500:
+                if len(new_data) == 400:
                     break
+            print(new_data)
                 
         elif self.data_name == "alpaca":
             shuffled_text = random.sample(data, len(data))
@@ -76,15 +77,15 @@ class config:
             for sent in shuffled_text:
                 if len(sent) == 50:
                     new_data.append(sent)
-                if len(new_data) == 500:
+                if len(new_data) == 400:
                     break
         elif self.data_name == "summarisation":
             shuffled_text = random.sample(data, len(data))
             new_data = []
             for sent in shuffled_text:
-                if len(sent) == 1100:
+                if len(sent) > 1000 and len(sent) < 1500:
                     new_data.append(sent)
-                if len(new_data) == 500:
+                if len(new_data) == 400:
                     break
         
         return new_data
@@ -105,8 +106,9 @@ if __name__ == "__main__":
     batch_size = args.batch_size
     dataset_used = args.data
     
-    configuration = config(device = "cuda", model_name = model_name, data_name = dataset_used)
+    configuration = config(device = args.device, model_name = model_name, data_name = dataset_used)
     data = configuration.data_selection()
+    print(data)
     model = configuration.model_selection()
     
     '''
@@ -134,11 +136,11 @@ if __name__ == "__main__":
     '''
     
     
-    grad_mlp = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
-    grad_mlp.forward()
+    # grad_mlp = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
+    # grad_mlp.forward()
     
     
-    grad_attn = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
-    grad_attn.forward()
+    # grad_attn = Gradient_attn(model, data, args.device, model.tokenizer, dataset_used, model_name)
+    # grad_attn.forward()
     
     

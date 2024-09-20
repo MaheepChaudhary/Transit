@@ -1,8 +1,5 @@
 from imports import *
 
-from scrap.imports import *
-
-
 class act_pythia_resid_post_mlp_addn:
 
     def __init__(
@@ -31,7 +28,6 @@ class act_pythia_resid_post_mlp_addn:
         
         with t.no_grad():
             for batch in tqdm(self.data):
-                
                 with self.model.trace(batch) as tracer:
                     output0 = self.model.gpt_neox.layers[0].output[0].save()
                     output1 = self.model.gpt_neox.layers[1].output[0].save()
@@ -39,12 +35,14 @@ class act_pythia_resid_post_mlp_addn:
                     output3 = self.model.gpt_neox.layers[3].output[0].save()
                     output4 = self.model.gpt_neox.layers[4].output[0].save()
 
+                print(f"Output0 shape: {np.array(output0).shape}"); print()
+                
                 # output0.shape -> (batch_size, 128, 2048)
-                activation_embeds["layer 0"].append(t.mean(t.norm(output0, dim = -1), dim = 0))
-                activation_embeds["layer 1"].append(t.mean(t.norm(output1, dim = -1), dim = 0))
-                activation_embeds["layer 2"].append(t.mean(t.norm(output2, dim = -1), dim = 0))
-                activation_embeds["layer 3"].append(t.mean(t.norm(output3, dim = -1), dim = 0))
-                activation_embeds["layer 4"].append(t.mean(t.norm(output4, dim = -1), dim = 0))
+                activation_embeds["layer 0"].append(t.norm(output0, dim = -1))
+                activation_embeds["layer 1"].append(t.norm(output1, dim = -1))
+                activation_embeds["layer 2"].append(t.norm(output2, dim = -1))
+                activation_embeds["layer 3"].append(t.norm(output3, dim = -1))
+                activation_embeds["layer 4"].append(t.norm(output4, dim = -1))
                 
                 
         return activation_embeds
@@ -65,6 +63,7 @@ class act_pythia_resid_post_mlp_addn:
             "layer 4": []
         }
         
+        print(f"Shape of Activation Embeds: {np.array(activation_embeds['layer 0']).shape}");print()
         
         norm_actemb["layer 0"] = np.mean(activation_embeds["layer 0"], axis=0)
         norm_actemb["layer 1"] = np.mean(activation_embeds["layer 1"], axis=0)
@@ -74,6 +73,8 @@ class act_pythia_resid_post_mlp_addn:
         
         # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
         
+        print(f"Shape of Norm Actemb: {np.array(norm_actemb['layer 0']).shape}");print()
+        
         actlist = np.array([
             np.log(np.array(norm_actemb["layer 0"])),
             np.log(np.array(norm_actemb["layer 1"])),
@@ -82,6 +83,8 @@ class act_pythia_resid_post_mlp_addn:
             np.log(np.array(norm_actemb["layer 4"])),
             # mean_acts["last layer"]
             ])
+        
+        print(f"Shape of the activation list: {actlist.shape}"); print()
         
         try:
             os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
