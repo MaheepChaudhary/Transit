@@ -18,9 +18,9 @@ class act_pythia_resid_post_mlp_addn:
         if self.dataset_name == "tinystories":
             self.max_length = 145
         elif self.dataset_name == "summarisation":
-            self.max_length = 1500
+            self.max_length = 340
         elif self.dataset_name == "alpaca":
-            self.max_length = 50
+            self.max_length = 10
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
@@ -433,9 +433,9 @@ class act_pythia_attention:
         if self.dataset_name == "tinystories":
             self.max_length = 145
         elif self.dataset_name == "summarisation":
-            self.max_length = 1500
+            self.max_length = 340
         elif self.dataset_name == "alpaca":
-            self.max_length = 50
+            self.max_length = 10
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
         self.model.eval()
