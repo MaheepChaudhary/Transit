@@ -116,17 +116,17 @@ if __name__ == "__main__":
     
     activation_resid= act_pythia_resid_post_mlp_addn(data, model, model_name, dataset_used)
     activation_resid.norm()
-    activation_resid.act_normwmean_ppma()
+    # activation_resid.act_normwmean_ppma()
     
     
     activation_mlp = act_pythia_mlp(data, model, model_name, dataset_used)
     activation_mlp.norm()
-    activation_mlp.act_normwmean_mlp()
+    # activation_mlp.act_normwmean_mlp()
     
     
     activation_attn = act_pythia_attention(data, model, model_name, dataset_used)
     activation_attn.norm()
-    activation_attn.act_normwmean_attn()
+    # activation_attn.act_normwmean_attn()
     
     
     '''
