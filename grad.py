@@ -3,13 +3,22 @@ from imports import *
 
 class Gradient_MLP:
     
-    def __init__(self, model, data, device, tokenizer, dataset_name, model_name):
-        self.model = model
+    def __init__(self, data, device, dataset_name, model_name):
+        
+        self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
+        self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+        
         self.data = data
         self.device = device
-        self.tokenizer = tokenizer
         self.dataset_name = dataset_name
         self.model_name = model_name
+        if self.dataset_name == "tinystories":
+            self.max_length = 145
+        elif self.dataset_name == "summarisation":
+            self.max_length = 340
+        elif self.dataset_name == "alpaca":
+            self.max_length = 10
         
     def forward(self):
         
@@ -19,7 +28,7 @@ class Gradient_MLP:
     
             token_gradients = []
             
-            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=128, truncation=True)
+            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
 
             # Get the outputs and compute loss
             outputs = self.model(**inputs)
@@ -73,13 +82,23 @@ class Gradient_MLP:
 
 class Gradient_attn:
     
-    def __init__(self, model, data, device, tokenizer, dataset_name, model_name):
-        self.model = model
+    def __init__(self, data, device, dataset_name, model_name):
+        
+        self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
+        self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+        self.tokenizer.pad_token = self.tokenizer.eos_token
+        
         self.data = data
         self.device = device
-        self.tokenizer = tokenizer
         self.dataset_name = dataset_name
         self.model_name = model_name
+        
+        if self.dataset_name == "tinystories":
+            self.max_length = 145
+        elif self.dataset_name == "summarisation":
+            self.max_length = 340
+        elif self.dataset_name == "alpaca":
+            self.max_length = 10
         
     def forward(self):
         
@@ -89,7 +108,7 @@ class Gradient_attn:
     
             token_gradients = []
             
-            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=128, truncation=True)
+            inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
 
             # Get the outputs and compute loss
             outputs = self.model(**inputs)
@@ -137,5 +156,5 @@ class Gradient_attn:
         sns.heatmap(np.mean(np.array(final_data), axis = 0).T, cmap='viridis', cbar=True, yticklabels=range(6), xticklabels=range(average_gradients_tensor.size(0)))
         plt.xlabel('Token Index')
         plt.ylabel('Layer Index')
-        plt.title(f'[{self.model_name}-{self.dataset_name}]Token-wise Gradient for mlp.dense_4h_to_h on log scale')
-        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/activation_mlp.png")
+        plt.title(f'[{self.model_name}-{self.dataset_name}]Token-wise Gradient for attention.dense on log scale')
+        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/activation_attention.png")
