@@ -5,14 +5,37 @@ class Gradient_MLP:
     
     def __init__(self, data, device, dataset_name, model_name):
         
-        self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
-        self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+        self.model_name = model_name
+        
+        if self.model_name == "Pythia14m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-14m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-14m')
+            
+        elif model_name == "Pythia70m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+            
+        elif model_name == "Pythia160m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-160m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-160m')
+        
+        elif model_name == "Pythia410m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-410m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-410m')
+        
+        elif model_name == "Pythia1b":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-1b')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-1b')
+        
+        elif model_name == "Pythia1.4b":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-1.4b')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-1.4b')
+        
         self.tokenizer.pad_token = self.tokenizer.eos_token
         
         self.data = data
         self.device = device
         self.dataset_name = dataset_name
-        self.model_name = model_name
         if self.dataset_name == "tinystories":
             self.max_length = 145
         elif self.dataset_name == "summarisation":
@@ -35,7 +58,6 @@ class Gradient_MLP:
             logits = outputs.logits
             loss = logits.sum()  # Example loss
 
-            print(logits.shape)
 
             # Iterate over each token
             for token_idx in range(inputs["input_ids"].shape[1]):  # Loop over the sequence length (tokens)
@@ -65,6 +87,14 @@ class Gradient_MLP:
             average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
 
             final_data.append(average_gradients_tensor)
+            
+            try:
+                os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            except:
+                pass
+            
+            with open(f"data/{self.dataset_name}/{self.model_name}/gradient_mlp.pkl", "wb") as f:
+                pickle.dump(final_data, f)
 
         self.visualise(final_data, average_gradients_tensor)
 
@@ -77,21 +107,44 @@ class Gradient_MLP:
         plt.xlabel('Token Index')
         plt.ylabel('Layer Index')
         plt.title(f'[{self.model_name}-{self.dataset_name}]Token-wise Gradient for mlp.dense_4h_to_h on log scale')
-        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/activation_mlp.png")
+        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/gradient_mlp.png")
 
 
 class Gradient_attn:
     
     def __init__(self, data, device, dataset_name, model_name):
         
-        self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
-        self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+        self.model_name = model_name
+        
+        if self.model_name == "Pythia14m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-14m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-14m')
+            
+        elif model_name == "Pythia70m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-70m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-70m')
+            
+        elif model_name == "Pythia160m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-160m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-160m')
+        
+        elif model_name == "Pythia410m":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-410m')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-410m')
+        
+        elif model_name == "Pythia1b":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-1b')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-1b')
+        
+        elif model_name == "Pythia1.4b":
+            self.model = AutoModelForCausalLM.from_pretrained('EleutherAI/pythia-1.4b')
+            self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-1.4b')
+            
         self.tokenizer.pad_token = self.tokenizer.eos_token
         
         self.data = data
         self.device = device
         self.dataset_name = dataset_name
-        self.model_name = model_name
         
         if self.dataset_name == "tinystories":
             self.max_length = 145
@@ -114,8 +167,6 @@ class Gradient_attn:
             outputs = self.model(**inputs)
             logits = outputs.logits
             loss = logits.sum()  # Example loss
-
-            print(logits.shape)
 
             # Iterate over each token
             for token_idx in range(inputs["input_ids"].shape[1]):  # Loop over the sequence length (tokens)
@@ -145,6 +196,14 @@ class Gradient_attn:
             average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
 
             final_data.append(average_gradients_tensor)
+            
+            try:
+                os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            except:
+                pass
+            
+            with open(f"data/{self.dataset_name}/{self.model_name}/gradient_attention.pkl", "wb") as f:
+                pickle.dump(final_data, f)
 
         self.visualise(final_data, average_gradients_tensor)
 
@@ -157,4 +216,4 @@ class Gradient_attn:
         plt.xlabel('Token Index')
         plt.ylabel('Layer Index')
         plt.title(f'[{self.model_name}-{self.dataset_name}]Token-wise Gradient for attention.dense on log scale')
-        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/activation_attention.png")
+        plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/gradient_attention.png")
