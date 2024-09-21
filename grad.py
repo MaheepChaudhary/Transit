@@ -88,13 +88,13 @@ class Gradient_MLP:
 
             final_data.append(average_gradients_tensor)
             
-            try:
-                os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
-            except:
-                pass
-            
-            with open(f"data/{self.dataset_name}/{self.model_name}/gradient_mlp.pkl", "wb") as f:
-                pickle.dump(final_data, f)
+        try:
+            os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/gradient_mlp.pkl", "wb") as f:
+            pickle.dump(final_data, f)
 
         self.visualise(final_data, average_gradients_tensor)
 
@@ -197,13 +197,13 @@ class Gradient_attn:
 
             final_data.append(average_gradients_tensor)
             
-            try:
-                os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
-            except:
-                pass
-            
-            with open(f"data/{self.dataset_name}/{self.model_name}/gradient_attention.pkl", "wb") as f:
-                pickle.dump(final_data, f)
+        try:
+            os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/gradient_attention.pkl", "wb") as f:
+            pickle.dump(final_data, f)
 
         self.visualise(final_data, average_gradients_tensor)
 

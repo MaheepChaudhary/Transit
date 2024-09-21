@@ -136,7 +136,7 @@ if __name__ == "__main__":
     '''
     
     
-    grad_mlp = Gradient_attn(data, args.device, dataset_used, model_name)
+    grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
     grad_mlp.forward()
     
     
