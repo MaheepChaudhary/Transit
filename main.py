@@ -84,10 +84,10 @@ class config:
             for sent in shuffled_text:
                 if len(sent.split()) > 310 or len(sent.split()) < 320:
                     new_data.append(sent)
-                if len(new_data) == 100:
+                if len(new_data) == 400:
                     break
         
-        assert len(new_data) == 100
+        assert len(new_data) == 400
         
         return new_data
 
