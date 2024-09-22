@@ -105,8 +105,8 @@ class Gradient_MLP:
             average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
             average_attn_gradients_tensor = torch.log(attn_token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
 
-        final_data.append(average_gradients_tensor)
-        attn_final_data.append(average_attn_gradients_tensor)
+            final_data.append(average_gradients_tensor)
+            attn_final_data.append(average_attn_gradients_tensor)
             
         try:
             os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
