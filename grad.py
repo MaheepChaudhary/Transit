@@ -43,6 +43,7 @@ class Gradient_MLP:
         elif self.dataset_name == "alpaca":
             self.max_length = 10
         
+        self.model.to(device)
         self.model.gpt_neox.embed_in.requires_grad = False
         for layer in self.model.gpt_neox.layers:
             for param in layer.parameters():

@@ -1,4 +1,4 @@
-python main.py --batch_size 16 --model_name "Pythia14m" --data "tinystories" --device "cuda"
+# python main.py --batch_size 16 --model_name "Pythia14m" --data "tinystories" --device "cuda"
 python main.py --batch_size 16 --model_name "Pythia70m" --data "tinystories" --device "cuda"
 python main.py --batch_size 16 --model_name "Pythia160m" --data "tinystories" --device "cuda"
 python main.py --batch_size 16 --model_name "Pythia410m" --data "tinystories" --device "cuda"
