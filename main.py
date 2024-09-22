@@ -67,7 +67,7 @@ class config:
             for sent in shuffled_text:
                 if len(sent.split()) == 143 or len(sent.split()) == 142:
                     new_data.append(sent)
-                if len(new_data) == 100:
+                if len(new_data) == 400:
                     break
                 
         elif self.data_name == "alpaca":
@@ -76,7 +76,7 @@ class config:
             for sent in shuffled_text:
                 if len(sent.split()) == 7:
                     new_data.append(sent)
-                if len(new_data) == 100:
+                if len(new_data) == 400:
                     break
         elif self.data_name == "summarisation":
             shuffled_text = random.sample(data, len(data))
