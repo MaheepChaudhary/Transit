@@ -43,6 +43,16 @@ class Gradient_MLP:
         elif self.dataset_name == "alpaca":
             self.max_length = 10
         
+        self.model.gpt_neox.embed_in.requires_grad = False
+        for layer in self.model.gpt_neox.layers:
+            for param in layer.parameters():
+                param.requires_grad = False
+            for param in layer.mlp.dense_4h_to_h.parameters():
+                param.requires_grad = True
+            for param in layer.attention.dense.parameters():
+                param.requires_grad = True
+
+        
     def forward(self):
         
         final_data = []
@@ -57,8 +67,7 @@ class Gradient_MLP:
             outputs = self.model(**inputs)
             logits = outputs.logits
             loss = logits.sum()  # Example loss
-
-
+            
             # Iterate over each token
             for token_idx in range(inputs["input_ids"].shape[1]):  # Loop over the sequence length (tokens)
                 self.model.zero_grad()  # Clear any previous gradients
