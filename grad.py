@@ -65,7 +65,7 @@ class Gradient_MLP:
             attn_token_gradients = []
             
             inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
-
+            inputs.to(self.device)
             # Get the outputs and compute loss
             outputs = self.model(**inputs)
             logits = outputs.logits
@@ -109,7 +109,7 @@ class Gradient_MLP:
         attn_final_data.append(average_attn_gradients_tensor)
             
         try:
-            os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
         except:
             pass
         
@@ -118,9 +118,11 @@ class Gradient_MLP:
             
         with open(f"data/{self.dataset_name}/{self.model_name}/gradient_attention.pkl", "wb") as f:
             pickle.dump(attn_final_data, f)
-
-        self.visualise(final_data, average_gradients_tensor, name = "MLP", title = "mlp.dense_4h_to_h")
-        self.visualise(attn_final_data, average_attn_gradients_tensor, name = "Attention", title = "attention.dense")
+        
+        final_data_cpu = [tensor.cpu() for tensor in final_data]
+        attn_final_data_cpu = [tensor.cpu() for tensor in attn_final_data]
+        self.visualise(final_data_cpu, average_gradients_tensor, name = "MLP", title = "mlp.dense_4h_to_h")
+        self.visualise(attn_final_data_cpu, average_attn_gradients_tensor, name = "Attention", title = "attention.dense")
 
 
     def visualise(self, final_data, average_gradients_tensor, name, title):
