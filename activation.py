@@ -98,8 +98,15 @@ class act_pythia_resid_post_mlp_addn:
         
         try:
             os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
         except:
             pass
+        
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_resid.pkl", "wb") as f:
+            pickle.dump(actlist, f)
         
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_resid.png")
 
@@ -308,11 +315,17 @@ class act_pythia_mlp:
             ])
         
         try:
-            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
         except:
             pass
         
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_mlp.png")
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_mlp.pkl", "wb") as f:
+            pickle.dump(actlist, f)
 
 
     def act_normwmean_fn_mlp(self):
@@ -509,9 +522,14 @@ class act_pythia_attention:
             ])
         
         try:
-            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
         except:
             pass
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_attn.pkl", "wb") as f:
+            pickle.dump(actlist, f)
         
         self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_attn.png")
         
