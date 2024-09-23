@@ -111,32 +111,73 @@ if __name__ == "__main__":
     data = configuration.data_selection()
     model = configuration.model_selection()
     
-    '''
-    Computing the Attention Norms
+    
+    # Computing the Attention Norms
+    
+    if args.model_name == "Pythia16m" or args.model_name == "Pythia70m":
+            
+        activation_resid= act_pythia14_70_resid_post_mlp_addn(data, model, model_name, dataset_used)
+        activation_resid.norm()
+        
+
+        activation_mlp = act_pythia14_70_mlp(data, model, model_name, dataset_used)
+        activation_mlp.norm()
+        
+        
+        activation_attn = act_pythia14_70_attention(data, model, model_name, dataset_used)
+        activation_attn.norm()
+    
+    
+    elif args.model_name == "Pythia410m" or args.model_name == "Pythia1.4b":
+            
+        activation_resid= act_pythia410_1_4_resid_post_mlp_addn(data, model, model_name, dataset_used)
+        activation_resid.norm()
+        
+
+        activation_mlp = act_pythia410_1_4_mlp(data, model, model_name, dataset_used)
+        activation_mlp.norm()
+        
+        
+        activation_attn = act_pythia410_1_4_attention(data, model, model_name, dataset_used)
+        activation_attn.norm()
+    
+    
+    elif args.model_name == "Pythia160m":
+            
+        activation_resid= act_pythia160_resid_post_mlp_addn(data, model, model_name, dataset_used)
+        activation_resid.norm()
+        
+
+        activation_mlp = act_pythia160_mlp(data, model, model_name, dataset_used)
+        activation_mlp.norm()
+        
+        
+        activation_attn = act_pythia160_attention(data, model, model_name, dataset_used)
+        activation_attn.norm()
+
+
+    elif args.model_name == "Pythia1b":
+            
+        activation_resid= act_pythia_1_resid_post_mlp_addn(data, model, model_name, dataset_used)
+        activation_resid.norm()
+        
+
+        activation_mlp = act_pythia_1_mlp(data, model, model_name, dataset_used)
+        activation_mlp.norm()
+        
+        
+        activation_attn = act_pythia_1_attention(data, model, model_name, dataset_used)
+        activation_attn.norm()
     
     
     
-    activation_resid= act_pythia_resid_post_mlp_addn(data, model, model_name, dataset_used)
-    activation_resid.norm()
-    # activation_resid.act_normwmean_ppma()
     
-    
-    activation_mlp = act_pythia_mlp(data, model, model_name, dataset_used)
-    activation_mlp.norm()
-    # activation_mlp.act_normwmean_mlp()
-    
-    
-    activation_attn = act_pythia_attention(data, model, model_name, dataset_used)
-    activation_attn.norm()
-    # activation_attn.act_normwmean_attn()
-    
-    
-    '''
+
     # Computing the attention gradients
 
     
-    
-    grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
-    grad_mlp.forward()
+
+    # grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
+    # grad_mlp.forward()
     
     
