@@ -113,7 +113,7 @@ if __name__ == "__main__":
     
     '''
     Computing the Attention Norms
-    '''
+    
     
     
     activation_resid= act_pythia_resid_post_mlp_addn(data, model, model_name, dataset_used)
@@ -132,15 +132,15 @@ if __name__ == "__main__":
     
     
     '''
-    Computing the attention gradients
-    '''
+    # Computing the attention gradients
+
     
     
-    # grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
-    # grad_mlp.forward()
+    grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
+    grad_mlp.forward()
     
     
-    # grad_attn = Gradient_attn(data, args.device, dataset_used, model_name)
-    # grad_attn.forward()
+    grad_attn = Gradient_attn(data, args.device, dataset_used, model_name)
+    grad_attn.forward()
     
     
