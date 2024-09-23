@@ -1,6 +1,6 @@
 from imports import *
 
-class act_pythia_resid_post_mlp_addn:
+class act_pythia14_70_resid_post_mlp_addn:
 
     def __init__(
         self, 
@@ -220,7 +220,7 @@ class act_pythia_resid_post_mlp_addn:
         plt.close()
 
 
-class act_pythia_mlp:
+class act_pythia14_70_mlp:
 
     def __init__(
         self, 
@@ -428,7 +428,7 @@ class act_pythia_mlp:
         plt.close()
 
 
-class act_pythia_attention:
+class act_pythia14_70_attention:
 
     def __init__(
         self, 
@@ -614,6 +614,513 @@ class act_pythia_attention:
     def plotting(self, data, name):
         # Create the heatmap
         fig, ax = plt.subplots(figsize=(10, 5))  # Set figure size
+        cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        cbar = fig.colorbar(cax, ax=ax)
+
+        # Set labels
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('Layers')
+
+        # Add labels to the right side (create twin axes sharing the same y-axis)
+        ax_right = ax.twinx()  
+        ax_right.set_ylabel('Log Scale', rotation=-90, labelpad=15)
+
+        # Optionally, you can add titles
+        plt.title(f"[{self.model_name}-{self.dataset_name}]:Activation of Attention")
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+
+
+class act_pythia160_resid_post_mlp_addn:
+
+    def __init__(
+        self, 
+        data,
+        model,
+        model_name,
+        dataset_name):
+        print(model)
+        self.data = data
+        self.model = model
+        self.model_name = model_name
+        self.dataset_name = dataset_name
+        self.tokenizer = self.model.tokenizer
+        
+        if self.dataset_name == "tinystories":
+            self.max_length = 145
+        elif self.dataset_name == "summarisation":
+            self.max_length = 340
+        elif self.dataset_name == "alpaca":
+            self.max_length = 10
+        
+    def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
+        self.model.eval()
+        
+        activation_embeds = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": [],
+        }
+        
+        with t.no_grad():
+            for sample in tqdm(self.data):
+                
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+
+                with self.model.trace(inputs) as tracer:
+                    output0 = self.model.gpt_neox.layers[0].output[0].save()
+                    output1 = self.model.gpt_neox.layers[1].output[0].save()
+                    output2 = self.model.gpt_neox.layers[2].output[0].save()
+                    output3 = self.model.gpt_neox.layers[3].output[0].save()
+                    output4 = self.model.gpt_neox.layers[4].output[0].save()
+                    output5 = self.model.gpt_neox.layers[5].output[0].save()
+                    output6 = self.model.gpt_neox.layers[6].output[0].save()
+                    output7 = self.model.gpt_neox.layers[7].output[0].save()
+                    output8 = self.model.gpt_neox.layers[8].output[0].save()
+                    output9 = self.model.gpt_neox.layers[9].output[0].save()
+                    output10 = self.model.gpt_neox.layers[10].output[0].save()
+                    output11 = self.model.gpt_neox.layers[11].output[0].save()
+                
+                # output0.shape -> (batch_size, 128, 2048)
+                activation_embeds["layer 0"].append(t.norm(output0.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 1"].append(t.norm(output1.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 2"].append(t.norm(output2.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 3"].append(t.norm(output3.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 4"].append(t.norm(output4.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 5"].append(t.norm(output5.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 6"].append(t.norm(output6.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 7"].append(t.norm(output7.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 8"].append(t.norm(output8.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 9"].append(t.norm(output9.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 10"].append(t.norm(output10.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 11"].append(t.norm(output11.detach().cpu(), dim = -1).squeeze(0))
+                
+                
+        return activation_embeds
+
+        
+    def norm(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        
+        activation_embeds = self.activation_embeds_fn()
+        
+        norm_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        
+        norm_actemb["layer 0"] = np.mean(np.array(activation_embeds["layer 0"]), axis=0)
+        norm_actemb["layer 1"] = np.mean(np.array(activation_embeds["layer 1"]), axis=0)
+        norm_actemb["layer 2"] = np.mean(np.array(activation_embeds["layer 2"]), axis=0)
+        norm_actemb["layer 3"] = np.mean(np.array(activation_embeds["layer 3"]), axis=0)
+        norm_actemb["layer 4"] = np.mean(np.array(activation_embeds["layer 4"]), axis=0)
+        norm_actemb["layer 5"] = np.mean(np.array(activation_embeds["layer 5"]), axis=0)
+        norm_actemb["layer 6"] = np.mean(np.array(activation_embeds["layer 6"]), axis=0)
+        norm_actemb["layer 7"] = np.mean(np.array(activation_embeds["layer 7"]), axis=0)
+        norm_actemb["layer 8"] = np.mean(np.array(activation_embeds["layer 8"]), axis=0)
+        norm_actemb["layer 9"] = np.mean(np.array(activation_embeds["layer 9"]), axis=0)
+        norm_actemb["layer 10"] = np.mean(np.array(activation_embeds["layer 10"]), axis=0)
+        norm_actemb["layer 11"] = np.mean(np.array(activation_embeds["layer 11"]), axis=0)
+        
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        
+        actlist = np.array([
+            np.log(np.array(norm_actemb["layer 0"])),
+            np.log(np.array(norm_actemb["layer 1"])),
+            np.log(np.array(norm_actemb["layer 2"])),
+            np.log(np.array(norm_actemb["layer 3"])),
+            np.log(np.array(norm_actemb["layer 4"])),
+            np.log(np.array(norm_actemb["layer 5"])),
+            np.log(np.array(norm_actemb["layer 6"])),
+            np.log(np.array(norm_actemb["layer 7"])),
+            np.log(np.array(norm_actemb["layer 8"])),
+            np.log(np.array(norm_actemb["layer 9"])),
+            np.log(np.array(norm_actemb["layer 10"])),
+            np.log(np.array(norm_actemb["layer 11"]))
+            ])
+            # mean_acts["last layer"]
+        
+        
+        try:
+            os.mkdir(f"figures/{self.dataset_name}/{self.model_name}")
+            os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_resid.pkl", "wb") as f:
+            pickle.dump(actlist, f)
+        
+        self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_resid.png")
+
+
+    def plotting(self, data, name):
+        # Create the heatmap
+        fig, ax = plt.subplots(figsize=(10, 11))  # Set figure size
+        cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        cbar = fig.colorbar(cax, ax=ax)
+
+        # Set labels
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('Layers')
+
+        # Add labels to the right side (create twin axes sharing the same y-axis)
+        ax_right = ax.twinx()  
+        ax_right.set_ylabel('Log Scale', rotation=-90, labelpad=15)
+
+        # Optionally, you can add titles
+        plt.title(f"[{self.model_name}-{self.dataset_name}]:Activation of residual post-mlp addn")
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+
+
+class act_pythia160_mlp:
+
+    def __init__(
+        self, 
+        data,
+        model,
+        model_name,
+        dataset_name):
+        
+        self.data = data
+        self.model = model
+        self.model_name = model_name
+        self.dataset_name = dataset_name
+        self.tokenizer = self.model.tokenizer
+        
+        if self.dataset_name == "tinystories":
+            self.max_length = 145
+        elif self.dataset_name == "summarisation":
+            self.max_length = 340
+        elif self.dataset_name == "alpaca":
+            self.max_length = 10
+        
+        
+    def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
+        self.model.eval()
+        
+        activation_embeds = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        with t.no_grad():
+            for sample in tqdm(self.data):
+                
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+                
+                with self.model.trace(inputs) as tracer:
+                    output0 = self.model.gpt_neox.layers[0].mlp.output.save()
+                    output1 = self.model.gpt_neox.layers[1].mlp.output.save()
+                    output2 = self.model.gpt_neox.layers[2].mlp.output.save()
+                    output3 = self.model.gpt_neox.layers[3].mlp.output.save()
+                    output4 = self.model.gpt_neox.layers[4].mlp.output.save()
+                    output5 = self.model.gpt_neox.layers[5].mlp.output.save()
+                    output6 = self.model.gpt_neox.layers[6].mlp.output.save()
+                    output7 = self.model.gpt_neox.layers[7].mlp.output.save()
+                    output8 = self.model.gpt_neox.layers[8].mlp.output.save()
+                    output9 = self.model.gpt_neox.layers[9].mlp.output.save()
+                    output10 = self.model.gpt_neox.layers[10].mlp.output.save()
+                    output11 = self.model.gpt_neox.layers[11].mlp.output.save()
+
+                # output0.shape -> (batch_size, 128, 2048)
+                activation_embeds["layer 0"].append(t.norm(output0.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 1"].append(t.norm(output1.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 2"].append(t.norm(output2.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 3"].append(t.norm(output3.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 4"].append(t.norm(output4.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 5"].append(t.norm(output5.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 6"].append(t.norm(output6.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 7"].append(t.norm(output7.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 8"].append(t.norm(output8.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 9"].append(t.norm(output9.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 10"].append(t.norm(output10.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 11"].append(t.norm(output11.detach().cpu(), dim = -1).squeeze(0))
+                
+        return activation_embeds
+
+        
+    def norm(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        norm_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        activation_embeds = self.activation_embeds_fn()
+        
+        
+        norm_actemb["layer 0"] = np.mean(activation_embeds["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(activation_embeds["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(activation_embeds["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(activation_embeds["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(activation_embeds["layer 4"], axis=0)
+        norm_actemb["layer 5"] = np.mean(activation_embeds["layer 5"], axis=0)
+        norm_actemb["layer 6"] = np.mean(activation_embeds["layer 6"], axis=0)
+        norm_actemb["layer 7"] = np.mean(activation_embeds["layer 7"], axis=0)
+        norm_actemb["layer 8"] = np.mean(activation_embeds["layer 8"], axis=0)
+        norm_actemb["layer 9"] = np.mean(activation_embeds["layer 9"], axis=0)
+        norm_actemb["layer 10"] = np.mean(activation_embeds["layer 10"], axis=0)
+        norm_actemb["layer 11"] = np.mean(activation_embeds["layer 11"], axis=0)
+        
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        actlist = np.array([
+            np.log(np.array(norm_actemb["layer 0"])),
+            np.log(np.array(norm_actemb["layer 1"])),
+            np.log(np.array(norm_actemb["layer 2"])),
+            np.log(np.array(norm_actemb["layer 3"])),
+            np.log(np.array(norm_actemb["layer 4"])),
+            np.log(np.array(norm_actemb["layer 5"])),
+            np.log(np.array(norm_actemb["layer 6"])),
+            np.log(np.array(norm_actemb["layer 7"])),
+            np.log(np.array(norm_actemb["layer 8"])),
+            np.log(np.array(norm_actemb["layer 9"])),
+            np.log(np.array(norm_actemb["layer 10"])),
+            np.log(np.array(norm_actemb["layer 11"]))
+            ])
+            # mean_acts["last layer"]
+        
+        try:
+            os.makedirs(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
+        self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_mlp.png")
+        
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_mlp.pkl", "wb") as f:
+            pickle.dump(actlist, f)
+
+
+ 
+    def plotting(self, data, name):
+        # Create the heatmap
+        fig, ax = plt.subplots(figsize=(10, 11))  # Set figure size
+        cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
+
+        # Add color bar to indicate the scale
+        cbar = fig.colorbar(cax, ax=ax)
+
+        # Set labels
+        ax.set_xlabel('Tokens')
+        ax.set_ylabel('Layers')
+
+        # Add labels to the right side (create twin axes sharing the same y-axis)
+        ax_right = ax.twinx()  
+        ax_right.set_ylabel('Log Scale', rotation=-90, labelpad=15)
+
+        # Optionally, you can add titles
+        plt.title(f"[{self.model_name}-{self.dataset_name}]:Activation of MLP")
+
+        # Show the heatmap
+        plt.savefig(name)
+        plt.close()
+
+
+class act_pythia160_attention:
+
+    def __init__(
+        self, 
+        data,
+        model,
+        model_name,
+        dataset_name):
+        
+        self.data = data
+        self.model = model
+        self.model_name = model_name
+        self.dataset_name = dataset_name
+        self.tokenizer = self.model.tokenizer
+        
+        if self.dataset_name == "tinystories":
+            self.max_length = 145
+        elif self.dataset_name == "summarisation":
+            self.max_length = 340
+        elif self.dataset_name == "alpaca":
+            self.max_length = 10
+        
+    def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
+        self.model.eval()
+        
+        activation_embeds = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        with t.no_grad():
+            for sample in tqdm(self.data):
+                
+                inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
+                
+                with self.model.trace(inputs) as tracer:
+                    output0 = self.model.gpt_neox.layers[0].attention.output[0].save()
+                    output1 = self.model.gpt_neox.layers[1].attention.output[0].save()
+                    output2 = self.model.gpt_neox.layers[2].attention.output[0].save()
+                    output3 = self.model.gpt_neox.layers[3].attention.output[0].save()
+                    output4 = self.model.gpt_neox.layers[4].attention.output[0].save()
+                    output5 = self.model.gpt_neox.layers[5].attention.output[0].save()
+                    output6 = self.model.gpt_neox.layers[6].attention.output[0].save()
+                    output7 = self.model.gpt_neox.layers[7].attention.output[0].save()
+                    output8 = self.model.gpt_neox.layers[8].attention.output[0].save()
+                    output9 = self.model.gpt_neox.layers[9].attention.output[0].save()
+                    output10 = self.model.gpt_neox.layers[10].attention.output[0].save()
+                    output11 = self.model.gpt_neox.layers[11].attention.output[0].save()
+
+                # output0.shape -> (batch_size, 128, 2048)
+                activation_embeds["layer 0"].append(t.norm(output0.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 1"].append(t.norm(output1.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 2"].append(t.norm(output2.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 3"].append(t.norm(output3.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 4"].append(t.norm(output4.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 5"].append(t.norm(output5.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 6"].append(t.norm(output6.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 7"].append(t.norm(output7.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 8"].append(t.norm(output8.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 9"].append(t.norm(output9.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 10"].append(t.norm(output10.detach().cpu(), dim = -1).squeeze(0))
+                activation_embeds["layer 11"].append(t.norm(output11.detach().cpu(), dim = -1).squeeze(0))
+                
+                
+        return activation_embeds
+
+        
+    def norm(self):
+        
+        # Additional norm calculations for nested structures
+        # assert np.array(self.actemb["layer 0"]).shape[1] == 128
+        norm_actemb = {
+            "layer 0": [],
+            "layer 1": [],
+            "layer 2": [],
+            "layer 3": [],
+            "layer 4": [],
+            "layer 5": [],
+            "layer 6": [],
+            "layer 7": [],
+            "layer 8": [],
+            "layer 9": [],
+            "layer 10": [],
+            "layer 11": []
+        }
+        
+        activation_embeds = self.activation_embeds_fn()
+        
+        
+        norm_actemb["layer 0"] = np.mean(activation_embeds["layer 0"], axis=0)
+        norm_actemb["layer 1"] = np.mean(activation_embeds["layer 1"], axis=0)
+        norm_actemb["layer 2"] = np.mean(activation_embeds["layer 2"], axis=0)
+        norm_actemb["layer 3"] = np.mean(activation_embeds["layer 3"], axis=0)
+        norm_actemb["layer 4"] = np.mean(activation_embeds["layer 4"], axis=0)
+        norm_actemb["layer 5"] = np.mean(activation_embeds["layer 5"], axis=0)
+        norm_actemb["layer 6"] = np.mean(activation_embeds["layer 6"], axis=0)
+        norm_actemb["layer 7"] = np.mean(activation_embeds["layer 7"], axis=0)
+        norm_actemb["layer 8"] = np.mean(activation_embeds["layer 8"], axis=0)
+        norm_actemb["layer 9"] = np.mean(activation_embeds["layer 9"], axis=0)
+        norm_actemb["layer 10"] = np.mean(activation_embeds["layer 10"], axis=0)
+        norm_actemb["layer 11"] = np.mean(activation_embeds["layer 11"], axis=0)
+        
+        # self.actemb["last layer"] = np.linalg.norm(self.actemb["last layer"], axis=0)
+        
+        actlist = np.array([
+            np.log(np.array(norm_actemb["layer 0"])),
+            np.log(np.array(norm_actemb["layer 1"])),
+            np.log(np.array(norm_actemb["layer 2"])),
+            np.log(np.array(norm_actemb["layer 3"])),
+            np.log(np.array(norm_actemb["layer 4"])),
+            np.log(np.array(norm_actemb["layer 5"])),
+            np.log(np.array(norm_actemb["layer 6"])),
+            np.log(np.array(norm_actemb["layer 7"])),
+            np.log(np.array(norm_actemb["layer 8"])),
+            np.log(np.array(norm_actemb["layer 9"])),
+            np.log(np.array(norm_actemb["layer 10"])),
+            np.log(np.array(norm_actemb["layer 11"]))
+            ])
+        
+        try:
+            os.makedirs(f"figures/{self.dataset_name}/{self.model_name}")
+            os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
+        except:
+            pass
+        output_dir = f"data/{self.dataset_name}/{self.model_name}"
+        os.makedirs(output_dir, exist_ok=True)
+        with open(f"data/{self.dataset_name}/{self.model_name}/activation_attn.pkl", "wb") as f:
+            pickle.dump(actlist, f)
+        
+        self.plotting(data=actlist, name = f"figures/{self.dataset_name}/{self.model_name}/activation_attn.png")
+        
+    
+    def plotting(self, data, name):
+        # Create the heatmap
+        fig, ax = plt.subplots(figsize=(10, 11))  # Set figure size
         cax = ax.imshow(data, aspect='auto', cmap='viridis')  # Choose a color map like 'viridis', 'plasma', etc.
 
         # Add color bar to indicate the scale
