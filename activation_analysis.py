@@ -12,19 +12,16 @@ class act_analysis_graph:
             with open(f"data/tinystories/{model_name}/activation_attn.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "tinystories", element_name="attn")
             
             with open(f"data/tinystories/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "tinystories", element_name="mlp")
             
             with open(f"data/tinystories/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "tinystories", element_name="resid")
             
         for model_name in self.model_names:
@@ -32,19 +29,16 @@ class act_analysis_graph:
             with open(f"data/alpaca/{model_name}/activation_attn.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "alpaca", element_name="attn")
             
             with open(f"data/alpaca/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "alpaca", element_name="mlp")
 
             with open(f"data/alpaca/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "alpaca", element_name="resid")
         
         for model_name in self.model_names:
@@ -52,26 +46,22 @@ class act_analysis_graph:
             with open(f"data/summarisation/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "summarisation", element_name="mlp")
             
             with open(f"data/summarisation/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "summarisation", element_name="resid")
             
             with open(f"data/summarisation/{model_name}/activation_attn.pkl", "rb") as f:
                 
                 data = pickle.load(f)
                 data = np.linalg.norm(data, axis = 1)
-                data = data/np.max(data)
                 self.plot(data, model_name, "summarisation", element_name="attn")
     
     def plot(self, data, model_name, dataset_name, element_name):
         
-        y_values = data
-        sizes = [int(y * 10)*10 for y in y_values]  # Make size proportional to the y-values
+        y_values = np.log(data)
         x_values = ["layer " + str(i) for i in range(len(data))]
 
         # Create scatter plot
@@ -80,18 +70,15 @@ class act_analysis_graph:
             y=y_values,
             mode='markers',
             marker=dict(
-                size=sizes,  # Circle size is proportional to y-values
-                color=y_values,  # Optional: color based on y-values
-                showscale=True,  # Show color scale on the side
-                colorscale='Viridis'  # Color scheme
+                showscale=False  # Do not show color scale
             )
         ))
 
         # Customize the layout
         fig.update_layout(
-            title=f"[{model_name}-{dataset_name}] Activation Analysis",
-            xaxis_title='X Axis',
-            yaxis_title='Y Axis',
+            title=f"[{model_name}-{dataset_name} (7 words/string)] Activation Avg. Norm. vs Layer for {element_name}",
+            xaxis_title='Layer Name in Pythia Model',
+            yaxis_title='Average Norm of Activation (Log-Scale)',
             showlegend=False
         )
 

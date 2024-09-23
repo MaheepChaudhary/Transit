@@ -71,7 +71,7 @@ class act_analysis_graph:
     def plot(self, data, model_name, dataset_name, element_name):
         
         y_values = data
-        sizes = [int(y * 10)*10 for y in y_values]  # Make size proportional to the y-values
+        # sizes = [int(y * 10)*10 for y in y_values]  # Make size proportional to the y-values
         x_values = ["layer " + str(i) for i in range(len(data))]
 
         # Create scatter plot
@@ -80,7 +80,7 @@ class act_analysis_graph:
             y=y_values,
             mode='markers',
             marker=dict(
-                size=sizes,  # Circle size is proportional to y-values
+                # size=sizes,  # Circle size is proportional to y-values
                 color=y_values,  # Optional: color based on y-values
                 showscale=True,  # Show color scale on the side
                 colorscale='Viridis'  # Color scheme
