@@ -78,7 +78,7 @@ class act_analysis_graph:
         fig = go.Figure(data=go.Scatter(
             x=x_values,
             y=y_values,
-            mode='markers',
+            mode='lines+markers',
             marker=dict(
                 # size=sizes,  # Circle size is proportional to y-values
                 color=y_values,  # Optional: color based on y-values
