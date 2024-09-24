@@ -65,6 +65,7 @@ class Gradient_MLP:
             
             inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
             # Get the outputs and compute loss
             outputs = self.model(**inputs)
             logits = outputs.logits
