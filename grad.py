@@ -93,7 +93,7 @@ class Gradient_MLP:
                     param_grad = layer.weight.grad.clone().view(-1)  # Clone and reshape the gradient
                     gradients.append(param_grad.unsqueeze(0))  # Append the gradient for this token
                     attn_gradients.append(attn_param_grad.unsqueeze(0))  # Append the gradient for this token
-
+                    torch.cuda.empty_cache()
                 # Convert gradients to a tensor and add to the list
                 token_gradients.append(torch.cat(gradients, dim=0))  # Shape: (layer_count, output_dim)
                 attn_token_gradients.append(torch.cat(attn_gradients, dim=0))  # Shape: (layer_count, output_dim)
