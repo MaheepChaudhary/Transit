@@ -89,8 +89,8 @@ class Gradient_MLP:
                 for i in range(num_layers):
                     layer = self.model.gpt_neox.layers[i].mlp.dense_4h_to_h  # Access the specific layer/parameter (adapted to Pythia)
                     attn_layer = self.model.gpt_neox.layers[i].attention.dense  # Access the specific layer/parameter (adapted to Pythia)
-                    attn_param_grad = attn_layer.weight.grad.clone().view(-1)  # Clone and reshape the gradient
-                    param_grad = layer.weight.grad.clone().view(-1)  # Clone and reshape the gradient
+                    attn_param_grad = attn_layer.weight.grad.clone().view(-1).detach().cpu()  # Clone, detach, and move to CPU
+                    param_grad = layer.weight.grad.clone().view(-1).detach().cpu()  # Clone, detach, and move to CPU
                     gradients.append(param_grad.unsqueeze(0))  # Append the gradient for this token
                     attn_gradients.append(attn_param_grad.unsqueeze(0))  # Append the gradient for this token
                     torch.cuda.empty_cache()
@@ -99,20 +99,13 @@ class Gradient_MLP:
                 attn_token_gradients.append(torch.cat(attn_gradients, dim=0))  # Shape: (layer_count, output_dim)
 
             # Convert token gradients to a tensor for visualization
-            # token_gradients_tensor = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
-            # attn_token_gradients_tensor = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
-            token_gradients = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
-            attn_token_gradients = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
+            token_gradients_tensor = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
+            attn_token_gradients_tensor = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
             # Compute the average gradient norm across layers for visualization
-            # average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
-            # average_attn_gradients_tensor = torch.log(attn_token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
-            token_gradients = torch.log(token_gradients.norm(dim=2))  # Shape: (seq_len, layer_count)
-            attn_token_gradients = torch.log(attn_token_gradients.norm(dim=2))  # Shape: (seq_len, layer_count)
-            
-            # final_data.append(average_gradients_tensor)
-            # attn_final_data.append(average_attn_gradients_tensor)
-            final_data.append(token_gradients)
-            attn_final_data.append(attn_token_gradients)
+            average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
+            average_attn_gradients_tensor = torch.log(attn_token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
+            final_data.append(average_gradients_tensor)
+            attn_final_data.append(average_attn_gradients_tensor)
             
             torch.cuda.empty_cache()
             
