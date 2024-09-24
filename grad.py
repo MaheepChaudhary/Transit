@@ -1,6 +1,5 @@
 from imports import *
 
-
 class Gradient_MLP:
     
     def __init__(self, data, device, dataset_name, model_name):
@@ -80,10 +79,14 @@ class Gradient_MLP:
                 token_loss = logits[0, token_idx, :].sum()
                 
                 # Perform backward pass with gradient checkpointing
+                # In the checkpoint function
                 def create_checkpoint_function(layer, token_loss):
                     def checkpoint_function(*inputs):
-                        return layer(*inputs)
+                        # Ensure the inputs are reshaped correctly
+                        reshaped_inputs = [input_tensor.view(-1, self.model.config.hidden_size) if input_tensor.dim() == 2 and input_tensor.size(1) == self.max_length else input_tensor for input_tensor in inputs]
+                        return layer(*reshaped_inputs)
                     return checkpoint_function
+
                 
                 # Apply gradient checkpointing to each layer
                 for layer in self.model.gpt_neox.layers:
@@ -143,4 +146,3 @@ class Gradient_MLP:
         plt.ylabel('Layer Index')
         plt.title(f'[{self.model_name}-{self.dataset_name}]Token-wise Gradient for {title} on log scale')
         plt.savefig(f"figures/{self.dataset_name}/{self.model_name}/gradient_{name}.png")
-
