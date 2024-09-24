@@ -60,12 +60,12 @@ class Gradient_MLP:
         attn_final_data = []
         
         for sample in tqdm(self.data):
-    
+        
             token_gradients = []
             attn_token_gradients = []
             
             inputs = self.tokenizer(sample, return_tensors="pt", padding='max_length', max_length=self.max_length, truncation=True)
-            inputs.to(self.device)
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
             # Get the outputs and compute loss
             outputs = self.model(**inputs)
             logits = outputs.logits
@@ -74,7 +74,7 @@ class Gradient_MLP:
             # Iterate over each token
             for token_idx in range(inputs["input_ids"].shape[1]):  # Loop over the sequence length (tokens)
                 self.model.zero_grad()  # Clear any previous gradients
-                
+            
                 # Compute loss only for this specific token's contribution
                 # Modify this if needed to focus on the exact component of the loss related to the token
                 token_loss = logits[0, token_idx, :].sum()
@@ -116,7 +116,6 @@ class Gradient_MLP:
             attn_final_data.append(average_attn_gradients_tensor)
             
             torch.cuda.empty_cache()
-            
         try:
             os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
         except:
