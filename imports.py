@@ -28,6 +28,9 @@ from transformers import AutoTokenizer, GPT2LMHeadModel, GPT2Tokenizer, AutoMode
 import gc
 import matplotlib.image as mpimg
 import seaborn as sns
+import matplotlib
+import plotly.graph_objects as go
+
 
 import wandb
 # from e2e_sae import SAETransformer
