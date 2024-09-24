@@ -79,8 +79,16 @@ class Gradient_MLP:
                 # Modify this if needed to focus on the exact component of the loss related to the token
                 token_loss = logits[0, token_idx, :].sum()
                 
-                # Perform backward pass
-                token_loss.backward(retain_graph=True)  # retain_graph=True allows subsequent backward passes
+                # Perform backward pass with gradient checkpointing
+                def create_checkpoint_function(layer, token_loss):
+                    def checkpoint_function(*inputs):
+                        return layer(*inputs)
+                    return checkpoint_function
+                
+                # Apply gradient checkpointing to each layer
+                for layer in self.model.gpt_neox.layers:
+                    checkpoint_function = create_checkpoint_function(layer, token_loss)
+                    torch.utils.checkpoint.checkpoint(checkpoint_function, *inputs.values())
                 
                 # Collect the gradient of the specific parameter for this token
                 gradients = []
@@ -108,7 +116,6 @@ class Gradient_MLP:
             attn_final_data.append(average_attn_gradients_tensor)
             
             torch.cuda.empty_cache()
-            
             
         try:
             os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
