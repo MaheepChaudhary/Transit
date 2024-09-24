@@ -11,53 +11,53 @@ class act_analysis_graph_1:
             
             with open(f"data/tinystories/{model_name}/activation_attn.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "tinystories", element_name="attn")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "tinystories", element_name="attn")
             
             with open(f"data/tinystories/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "tinystories", element_name="mlp")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "tinystories", element_name="mlp")
             
             with open(f"data/tinystories/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "tinystories", element_name="resid")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "tinystories", element_name="resid")
             
         for model_name in self.model_names:
             
             with open(f"data/alpaca/{model_name}/activation_attn.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "alpaca", element_name="attn")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "alpaca", element_name="attn")
             
             with open(f"data/alpaca/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "alpaca", element_name="mlp")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "alpaca", element_name="mlp")
 
             with open(f"data/alpaca/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "alpaca", element_name="resid")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "alpaca", element_name="resid")
         
         for model_name in self.model_names:
             
             with open(f"data/summarisation/{model_name}/activation_mlp.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "summarisation", element_name="mlp")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "summarisation", element_name="mlp")
             
             with open(f"data/summarisation/{model_name}/activation_resid.pkl", "rb") as f:
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "summarisation", element_name="resid")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "summarisation", element_name="resid")
             
             with open(f"data/summarisation/{model_name}/activation_attn.pkl", "rb") as f:
                 
                 data = pickle.load(f)
-                data = np.linalg.norm(data, axis = 1)
-                self.plot(data, model_name, "summarisation", element_name="attn")
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                self.plot(np.log(data), model_name, "summarisation", element_name="attn")
     
     def plot(self, data, model_name, dataset_name, element_name):
             
@@ -79,7 +79,7 @@ class act_analysis_graph_1:
         fig.update_layout(
             title=f"[{model_name}-{dataset_name}] Activation Analysis",
             xaxis_title='Layers',
-            yaxis_title='Activation Value',
+            yaxis_title='Activation Value (Log-Scale)',
             showlegend=False
         )
 
@@ -96,14 +96,14 @@ class act_analysis_graph_2:
         
         for dataset in [["tinystories", "145 words/string"], ["alpaca", "7 words/string"], ["summarisation", "340 words/string"]]:
             final_data_attn = {}
-            
+            print(dataset)
             for model_name in self.model_names:
                 
                 with open(f"data/{dataset[0]}/{model_name}/activation_attn.pkl", "rb") as f:
                     data = pickle.load(f)
                 
-                data = np.linalg.norm(data, axis = 1)
-                final_data_attn[model_name] = data
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                final_data_attn[model_name] = np.log(data)
             
             
             self.plot(
@@ -121,15 +121,15 @@ class act_analysis_graph_2:
                 with open(f"data/{dataset[0]}/{model_name}/activation_mlp.pkl", "rb") as f:
                     data = pickle.load(f)
                 
-                data = np.linalg.norm(data, axis = 1)
-                final_data_mlp[model_name] = data
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                final_data_mlp[model_name] = np.log(data)
             
             
             self.plot(
-                data = final_data_attn, 
+                data = final_data_mlp, 
                 dataset_name = dataset[0],
                 words = dataset[1], 
-                element_name = "attn", 
+                element_name = "mlp", 
                 models_names = self.model_names
                 )
             
@@ -141,68 +141,20 @@ class act_analysis_graph_2:
                 with open(f"data/{dataset[0]}/{model_name}/activation_resid.pkl", "rb") as f:
                     data = pickle.load(f)
                 
-                data = np.linalg.norm(data, axis = 1)
-                final_data_resid[model_name] = data
+                data = np.linalg.norm(np.exp(data), axis = 1)
+                final_data_resid[model_name] = np.log(data)
             
             
             self.plot(
-                data = final_data_attn, 
+                data = final_data_resid, 
                 dataset_name = dataset[0],
                 words = dataset[1], 
-                element_name = "attn", 
+                element_name = "resid", 
                 models_names = self.model_names
                 )
         
         
             
-        #     self.plot(data, model_name, "tinystories", element_name="attn")
-            
-        #     with open(f"data/tinystories/{model_name}/activation_mlp.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "tinystories", element_name="mlp")
-            
-        #     with open(f"data/tinystories/{model_name}/activation_resid.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "tinystories", element_name="resid")
-            
-        # for model_name in self.model_names:
-            
-        #     with open(f"data/alpaca/{model_name}/activation_attn.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "alpaca", element_name="attn")
-            
-        #     with open(f"data/alpaca/{model_name}/activation_mlp.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "alpaca", element_name="mlp")
-
-        #     with open(f"data/alpaca/{model_name}/activation_resid.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "alpaca", element_name="resid")
-        
-        # for model_name in self.model_names:
-            
-        #     with open(f"data/summarisation/{model_name}/activation_mlp.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "summarisation", element_name="mlp")
-            
-        #     with open(f"data/summarisation/{model_name}/activation_resid.pkl", "rb") as f:
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "summarisation", element_name="resid")
-            
-        #     with open(f"data/summarisation/{model_name}/activation_attn.pkl", "rb") as f:
-                
-        #         data = pickle.load(f)
-        #         data = np.linalg.norm(data, axis = 1)
-        #         self.plot(data, model_name, "summarisation", element_name="attn")
-        
-
 
     def plot(self, data, dataset_name, element_name, models_names, words):
         # Create an empty figure
@@ -240,7 +192,7 @@ class act_analysis_graph_2:
         fig.update_layout(
             title=f"[{dataset_name} {words}] Attention Activation Analysis for All Models",
             xaxis_title='Normalized Layers',
-            yaxis_title='Activation Value',
+            yaxis_title='Activation Value Norm per layer (Log-Scale)',
             showlegend=True  # Show the legend to distinguish between models
         )
 
@@ -251,8 +203,8 @@ class act_analysis_graph_2:
 
 if __name__ == "__main__":
     
-    # act_analysis = act_analysis_graph_1()
-    # act_analysis.forward()
-    
-    act_analysis = act_analysis_graph_2()
+    act_analysis = act_analysis_graph_1()
     act_analysis.forward()
+    
+    act_analysis_ = act_analysis_graph_2()
+    act_analysis_.forward()
