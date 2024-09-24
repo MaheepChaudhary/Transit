@@ -85,7 +85,8 @@ class Gradient_MLP:
                 # Collect the gradient of the specific parameter for this token
                 gradients = []
                 attn_gradients = []
-                for i in range(6):
+                num_layers = len(self.model.gpt_neox.layers)
+                for i in range(num_layers):
                     layer = self.model.gpt_neox.layers[i].mlp.dense_4h_to_h  # Access the specific layer/parameter (adapted to Pythia)
                     attn_layer = self.model.gpt_neox.layers[i].attention.dense  # Access the specific layer/parameter (adapted to Pythia)
                     attn_param_grad = attn_layer.weight.grad.clone().view(-1)  # Clone and reshape the gradient
@@ -128,7 +129,7 @@ class Gradient_MLP:
     def visualise(self, final_data, average_gradients_tensor, name, title):
 
         # Visualize the gradients using a heatmap
-        plt.figure(figsize=(15, 6))
+        plt.figure(figsize=(15, 11))
         sns.heatmap(np.mean(np.array(final_data), axis = 0).T, cmap='viridis', cbar=True, yticklabels=range(6), xticklabels=range(average_gradients_tensor.size(0)))
         plt.xlabel('Token Index')
         plt.ylabel('Layer Index')

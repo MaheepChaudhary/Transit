@@ -112,6 +112,7 @@ if __name__ == "__main__":
     model = configuration.model_selection()
     
     
+    '''
     # Computing the Attention Norms
     
     if args.model_name == "Pythia16m" or args.model_name == "Pythia70m":
@@ -169,15 +170,13 @@ if __name__ == "__main__":
         activation_attn = act_pythia_1_attention(data, model, model_name, dataset_used)
         activation_attn.norm()
     
-    
+    '''
     
     
 
     # Computing the attention gradients
 
-    
-
-    # grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
-    # grad_mlp.forward()
+    grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
+    grad_mlp.forward()
     
     
