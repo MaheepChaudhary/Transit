@@ -109,6 +109,9 @@ class Gradient_MLP:
             final_data.append(average_gradients_tensor)
             attn_final_data.append(average_attn_gradients_tensor)
             
+            torch.cuda.empty_cache()
+            
+            
         try:
             os.makedirs(f"data/{self.dataset_name}/{self.model_name}")
         except:
@@ -125,6 +128,7 @@ class Gradient_MLP:
         self.visualise(final_data_cpu, average_gradients_tensor, name = "MLP", title = "mlp.dense_4h_to_h")
         self.visualise(attn_final_data_cpu, average_attn_gradients_tensor, name = "Attention", title = "attention.dense")
 
+        torch.cuda.empty_cache()
 
     def visualise(self, final_data, average_gradients_tensor, name, title):
 
