@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type = str, default="Pythia70m")
     parser.add_argument("--batch_size", type=int, default="16")
     parser.add_argument("--data", type = str, default = "tinystories")
-    parser.add_argument("--device", type = str, default = "cuda")
+    parser.add_argument("--device", type = str, default = "mps")
     
     args = parser.parse_args()
     
@@ -173,7 +173,6 @@ if __name__ == "__main__":
     '''
     
     
-
     # Computing the attention gradients
 
     grad_mlp = Gradient_MLP(data, args.device, dataset_used, model_name)
