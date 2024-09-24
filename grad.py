@@ -99,15 +99,20 @@ class Gradient_MLP:
                 attn_token_gradients.append(torch.cat(attn_gradients, dim=0))  # Shape: (layer_count, output_dim)
 
             # Convert token gradients to a tensor for visualization
-            token_gradients_tensor = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
-            attn_token_gradients_tensor = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
-            
+            # token_gradients_tensor = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
+            # attn_token_gradients_tensor = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
+            token_gradients = torch.stack(token_gradients)  # Shape: (seq_len, layer_count, output_dim)
+            attn_token_gradients = torch.stack(attn_token_gradients)  # Shape: (seq_len, layer_count, output_dim)
             # Compute the average gradient norm across layers for visualization
-            average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
-            average_attn_gradients_tensor = torch.log(attn_token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
-
-            final_data.append(average_gradients_tensor)
-            attn_final_data.append(average_attn_gradients_tensor)
+            # average_gradients_tensor = torch.log(token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
+            # average_attn_gradients_tensor = torch.log(attn_token_gradients_tensor.norm(dim=2))  # Shape: (seq_len, layer_count)
+            token_gradients = torch.log(token_gradients.norm(dim=2))  # Shape: (seq_len, layer_count)
+            attn_token_gradients = torch.log(attn_token_gradients.norm(dim=2))  # Shape: (seq_len, layer_count)
+            
+            # final_data.append(average_gradients_tensor)
+            # attn_final_data.append(average_attn_gradients_tensor)
+            final_data.append(token_gradients)
+            attn_final_data.append(attn_token_gradients)
             
             torch.cuda.empty_cache()
             
