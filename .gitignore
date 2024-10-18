@@ -19,3 +19,13 @@ scrap/__pycache__/imports.cpython-310.pyc
 __pycache__/grad.cpython-310.pyc
 data/*
 scrap/__pycache__/main.cpython-311.pyc
+figures/.DS_Store
+figures/alpaca/.DS_Store
+figures/alpaca/Pythia14m/.DS_Store
+figures/alpaca/Pythia160m/.DS_Store
+figures/alpaca/Pythia1b/.DS_Store
+figures/alpaca/Pythia410m/.DS_Store
+figures/alpaca/Pythia70m/.DS_Store
+figures/summarisation/.DS_Store
+.DS_Store
+.DS_Store
