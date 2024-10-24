@@ -30,3 +30,10 @@ This indicates typical behaviour where the beginner layer is most activated and 
 
 But, how can these gradients can be interpreted-which index neuron is responsible for generating the output. However, it should be evaluated after taking the overall gradient and finding the analysis of the graph. 
 
+## Counterfactual Activation Analysis:
+
+Here we would need all the activations mean representations, stored in a pickle file. 
+These mean activations of all the datasets would be then subtracted from the each layer to get the interevened representations 
+which are truly the influence of the dataset. 
+This would help in suppressing the the model's common behaviour and focus on the dataset's influence.
+Specifically, this would supress the model's attention sink behaviour and abnormal high activation behaviour observed in models. 
