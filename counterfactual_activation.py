@@ -1,4 +1,6 @@
 from imports import *
+from fastdtw import fastdtw
+from scipy.spatial.distance import euclidean
 
 
 def average_activation_for_layer(model_name):
@@ -20,6 +22,7 @@ def average_activation_for_layer(model_name):
         model_layer = 16
         activations = {f"layer {i}": [] for i in range(model_layer)}
         
+    # Collect activations from datasets
     for dataset in datasets:
         file_path = f"data/{dataset}/{model_name}/activation_resid.pkl"
         if os.path.exists(file_path):
@@ -30,14 +33,30 @@ def average_activation_for_layer(model_name):
 
     pprint(activations)
     avg_activations = {}
+    
+    # Align activations using DTW and compute the average
     for layer, acts in activations.items():
         if acts:
-            avg_activations[layer] = np.mean(acts, axis=0)
+            reference = np.array(acts[0]).flatten()  # Flatten the reference activation
+            aligned_acts = []
+            for act in acts:
+                flattened_act = np.array(act).flatten()  # Flatten each activation before DTW
+                print()
+                print(f"Reference shape: {reference.shape}, Flattened act shape: {flattened_act.shape}")
+                print()
+                _, path = fastdtw(reference, flattened_act, dist=euclidean)
+                
+                # Align activations based on DTW path
+                aligned_acts.append([flattened_act[i] for i, _ in path])
+                
+            # Compute the mean of the aligned activations
+            avg_activations[layer] = np.mean(aligned_acts, axis=0)
         else:
             raise FileNotFoundError(f"No activation data found for the specified model and layer {layer}.")
 
     return avg_activations
 
+# Call the function
 avg_activation = average_activation_for_layer("Pythia70m")
 
 # class act_pythia14_70_resid_post_mlp_addn:
