@@ -2,6 +2,7 @@ from imports import *
 from dataset import *
 from activation import *
 from grad import *
+from counterfactual_activation import *
 
 class config:
     
@@ -100,6 +101,8 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default="16")
     parser.add_argument("--data", type = str, default = "tinystories")
     parser.add_argument("--device", type = str, default = "mps")
+    parser.add_argument("--task", type = str, required=True)
+    parser.add_argument("--layer_type", type = str, required=True)
     
     args = parser.parse_args()
     
@@ -115,7 +118,7 @@ if __name__ == "__main__":
 
     # Computing the Attention Norms
     
-    if args.model_name == "Pythia16m" or args.model_name == "Pythia70m":
+    if args.model_name == "Pythia16m" or args.model_name == "Pythia70m" and args.task == "activations":
             
         activation_resid= act_pythia14_70_resid_post_mlp_addn(data, model, model_name, dataset_used)
         activation_resid.norm()
@@ -129,7 +132,7 @@ if __name__ == "__main__":
         activation_attn.norm()
     
     
-    elif args.model_name == "Pythia410m" or args.model_name == "Pythia1.4b":
+    elif args.model_name == "Pythia410m" or args.model_name == "Pythia1.4b" and args.task == "activations":
             
         activation_resid= act_pythia410_1_4_resid_post_mlp_addn(data, model, model_name, dataset_used)
         activation_resid.norm()
@@ -143,7 +146,7 @@ if __name__ == "__main__":
         activation_attn.norm()
     
     
-    elif args.model_name == "Pythia160m":
+    elif args.model_name == "Pythia160m" and args.task == "activations":
             
         activation_resid= act_pythia160_resid_post_mlp_addn(data, model, model_name, dataset_used)
         activation_resid.norm()
@@ -157,7 +160,7 @@ if __name__ == "__main__":
         activation_attn.norm()
 
 
-    elif args.model_name == "Pythia1b":
+    elif args.model_name == "Pythia1b" and args.task == "activations":
             
         activation_resid= act_pythia_1_resid_post_mlp_addn(data, model, model_name, dataset_used)
         activation_resid.norm()
@@ -170,6 +173,15 @@ if __name__ == "__main__":
         activation_attn = act_pythia_1_attention(data, model, model_name, dataset_used)
         activation_attn.norm()
     
+    elif args.model_name == "Pythia70m" or args.model_name == "Pythia14m" and args.task == "counterfactual activations":
+        counterfactual_activations = counterfactual_activation_1470m(
+            data = data,
+            model= model,
+            model_name = model_name, 
+            dataset_name = args.data, 
+            layer_type = args.layer_type)
+        
+        counterfactual_activations.norm()
     
     
     # Computing the attention gradients
