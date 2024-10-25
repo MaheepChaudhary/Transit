@@ -9,55 +9,63 @@ def average_activation_for_layer(model_name):
     if model_name == "Pythia14m" or model_name == "Pythia70m":
         model_layer = 6
         activations = {f"layer {i}": [] for i in range(model_layer)}
-        
     elif model_name == "Pythia160m":
         model_layer = 12
         activations = {f"layer {i}": [] for i in range(model_layer)}
-        
     elif model_name == "Pythia410m":
         model_layer = 24
         activations = {f"layer {i}": [] for i in range(model_layer)}
-    
     elif model_name == "Pythia1b":
         model_layer = 16
         activations = {f"layer {i}": [] for i in range(model_layer)}
-        
+
     # Collect activations from datasets
     for dataset in datasets:
         file_path = f"data/{dataset}/{model_name}/activation_resid.pkl"
         if os.path.exists(file_path):
             with open(file_path, "rb") as f:
                 data = pickle.load(f)
+                print(f"Loaded {len(data)} activation entries for {dataset}")
                 for count, act_data in enumerate(data):
-                    activations[f"layer {count}"].append(act_data)
+                    if count < model_layer:
+                        activations[f"layer {count}"].append(act_data)
+        else:
+            print(f"File not found for {dataset}: {file_path}")
 
-    pprint(activations)
+    # Process activations
     avg_activations = {}
-    
-    # Align activations using DTW and compute the average
     for layer, acts in activations.items():
         if acts:
-            reference = np.array(acts[0]).flatten()  # Flatten the reference activation
+            reference = np.array(acts[1]).reshape(-1, 1)  # Flatten the reference activation
+            reference_len = len(reference)
             aligned_acts = []
+
             for act in acts:
-                flattened_act = np.array(act).flatten()  # Flatten each activation before DTW
-                print()
-                print(f"Reference shape: {reference.shape}, Flattened act shape: {flattened_act.shape}")
-                print()
+                flattened_act = np.array(act).reshape(-1, 1)  # Flatten each activation before DTW
                 _, path = fastdtw(reference, flattened_act, dist=euclidean)
+
+                # Align activations based on DTW path, creating an interpolated activation of reference length
+                aligned_act = np.zeros((reference_len, 1))
+                for ref_idx, act_idx in path:
+                    aligned_act[ref_idx] += flattened_act[act_idx]
                 
-                # Align activations based on DTW path
-                aligned_acts.append([flattened_act[i] for i, _ in path])
+                # Normalize the aligned activations by the number of matches to account for repetitions
+                counts = np.bincount([ref_idx for ref_idx, _ in path], minlength=reference_len)
+                counts[counts == 0] = 1  # Avoid division by zero
+                aligned_act /= counts.reshape(-1, 1)
                 
+                aligned_acts.append(aligned_act.flatten())
+
             # Compute the mean of the aligned activations
             avg_activations[layer] = np.mean(aligned_acts, axis=0)
         else:
-            raise FileNotFoundError(f"No activation data found for the specified model and layer {layer}.")
+            print(f"No activation data found for layer {layer}")
 
     return avg_activations
 
 # Call the function
 avg_activation = average_activation_for_layer("Pythia70m")
+
 
 # class act_pythia14_70_resid_post_mlp_addn:
 
