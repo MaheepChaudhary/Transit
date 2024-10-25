@@ -100,6 +100,45 @@ class counterfactual_activation_1470m:
         elif self.dataset_name == "alpaca":
             self.max_length = 10
     
+    def run_and_plot_counterfactual_activations(self):
+        datasets = ["tinystories", "summarisation", "alpaca"]
+        counterfactual_activations = {}
+        
+        for dataset in datasets:
+            self.dataset_name = dataset
+            if dataset == "tinystories":
+                self.max_length = 145
+            elif dataset == "summarisation":
+                self.max_length = 340
+            elif dataset == "alpaca":
+                self.max_length = 10
+            
+            activation_embeds = self.activation_embeds_fn()
+            norm_actemb = {f"layer {i}": np.mean(np.array(activation_embeds[f"layer {i}"]), axis=0) for i in range(6)}
+            
+            counterfactual_avg_activations = average_activation_for_layer(self.model_name, self.dataset_name, self.layer_type)
+            
+            counterfactual_subtracted_activations = {
+                layer: norm_actemb[layer] - counterfactual_avg_activations[layer]
+                for layer in norm_actemb.keys()
+            }
+            
+            counterfactual_activations[dataset] = [np.linalg.norm(counterfactual_subtracted_activations[f"layer {i}"]) for i in range(6)]
+        
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        for dataset, activations in counterfactual_activations.items():
+            plt.plot(range(6), activations, marker='o', label=dataset)
+        
+        plt.xlabel('Layer')
+        plt.ylabel('Norm of Counterfactual Subtracted Activations')
+        plt.title('Counterfactual Activations Across Layers for Different Datasets')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig('counterfactual_activations_plot.png')
+        plt.close()
+        
+        return counterfactual_activations
 
         
     def activation_embeds_fn(self): # So it contains 5 layers and one last layer. 
@@ -154,10 +193,14 @@ class counterfactual_activation_1470m:
             f"layer {i}": norm_actemb[f"layer {i}"] - np.exp(counterfactual_avg_activations[f"layer {i}"])
             for i in range(6)
         }
-        print(counterfactual_subtracted_activations)
+        
         # Convert the subtracted activations to a list for saving
+        for layer in range(6):
+            min_value = np.min(counterfactual_subtracted_activations[f"layer {layer}"])
+            print(f"Lowest value in layer {layer}: {min_value}")
+            
         actlist = np.array([
-            np.array(counterfactual_avg_activations[f"layer {i}"])
+            np.abs(np.array(counterfactual_subtracted_activations[f"layer {i}"]))
             for i in range(6)
         ])
         
@@ -166,6 +209,8 @@ class counterfactual_activation_1470m:
             os.mkdir(f"data/{self.dataset_name}/{self.model_name}")
         except:
             pass
+
+        
         
         output_dir = f"data/{self.dataset_name}/{self.model_name}"
         os.makedirs(output_dir, exist_ok=True)

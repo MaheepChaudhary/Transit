@@ -55,7 +55,19 @@
 # python main.py --batch_size 16 --model_name "Pythia1.4b" --data "summarisation" --device "mps"
 
 
-echo "Running the counterfactual activations"
+echo "Running the counterfactual activations for MLP"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "alpaca" --device "mps" --task "counterfactual activations" --layer_type "activation_mlp"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "tinystories" --device "mps" --task "counterfactual activations" --layer_type "activation_mlp"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "summarisation" --device "mps" --task "counterfactual activations" --layer_type "activation_mlp"
+
+echo "Running the counterfactual activations for Attention"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "alpaca" --device "mps" --task "counterfactual activations" --layer_type "activation_attn"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "tinystories" --device "mps" --task "counterfactual activations" --layer_type "activation_attn"
+python main.py --batch_size 16 --model_name "Pythia14m" --data "summarisation" --device "mps" --task "counterfactual activations" --layer_type "activation_attn"
+
+echo "Running the counterfactual activations for Residual"
 python main.py --batch_size 16 --model_name "Pythia14m" --data "alpaca" --device "mps" --task "counterfactual activations" --layer_type "activation_resid"
 python main.py --batch_size 16 --model_name "Pythia14m" --data "tinystories" --device "mps" --task "counterfactual activations" --layer_type "activation_resid"
 python main.py --batch_size 16 --model_name "Pythia14m" --data "summarisation" --device "mps" --task "counterfactual activations" --layer_type "activation_resid"
+
+
