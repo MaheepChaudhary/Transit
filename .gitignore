@@ -30,3 +30,7 @@ figures/summarisation/.DS_Store
 .DS_Store
 .DS_Store
 __pycache__/imports.cpython-312.pyc
+__pycache__/activation.cpython-311.pyc
+__pycache__/counterfactual_activation.cpython-311.pyc
+__pycache__/imports.cpython-39.pyc
+__pycache__/grad.cpython-311.pyc
